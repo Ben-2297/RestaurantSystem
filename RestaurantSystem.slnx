@@ -1,6 +1,4 @@
 <Solution>
   <Project Path="Restaurant.API/Restaurant.API.csproj" />
-  <Project Path="Restaurant.App/Restaurant.App.csproj" />
   <Project Path="Restaurant.Client/Restaurant.Client.csproj" />
 </Solution>
-

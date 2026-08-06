@@ -10,10 +10,12 @@ public sealed class CustomAuthStateProvider : AuthenticationStateProvider
 {
     private static readonly ClaimsPrincipal Anonymous = new(new ClaimsIdentity());
     private readonly ILocalStorageService _localStorage;
+    private readonly HttpClient _httpClient;
 
-    public CustomAuthStateProvider(ILocalStorageService localStorage)
+    public CustomAuthStateProvider(ILocalStorageService localStorage, HttpClient httpClient)
     {
         _localStorage = localStorage;
+        _httpClient = httpClient;
     }
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
@@ -56,14 +58,24 @@ public sealed class CustomAuthStateProvider : AuthenticationStateProvider
 
             return keyValuePairs.SelectMany(entry =>
             {
+                var claimType = entry.Key switch
+                {
+                    "role" => ClaimTypes.Role,
+                    "roles" => ClaimTypes.Role,
+                    "http://schemas.microsoft.com/ws/2008/06/identity/claims/role" => ClaimTypes.Role,
+                    "name" => ClaimTypes.Name,
+                    "unique_name" => ClaimTypes.Name,
+                    _ => entry.Key
+                };
+
                 if (entry.Value.ValueKind == JsonValueKind.Array)
                 {
                     return entry.Value
                         .EnumerateArray()
-                        .Select(v => new Claim(entry.Key, v.ToString()));
+                        .Select(v => new Claim(claimType, v.ToString()));
                 }
 
-                return new[] { new Claim(entry.Key, entry.Value.ToString()) };
+                return new[] { new Claim(claimType, entry.Value.ToString()) };
             });
         }
         catch

@@ -209,8 +209,8 @@
 /home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/bin/Debug/net10.0/wwwroot/_framework/icudt_EFIGS.tptq2av103.dat
 /home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/bin/Debug/net10.0/wwwroot/_framework/icudt_no_CJK.lfu7j35m59.dat
 /home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/bin/Debug/net10.0/wwwroot/_framework/Microsoft.DotNet.HotReload.WebAssembly.Browser.3o7yr60r40.wasm
-/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/bin/Debug/net10.0/wwwroot/_framework/Restaurant.Client.zsirbqjv29.wasm
-/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/bin/Debug/net10.0/wwwroot/_framework/Restaurant.Client.goxxmk5idd.pdb
+/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/bin/Debug/net10.0/wwwroot/_framework/Restaurant.Client.diksi8i9ru.wasm
+/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/bin/Debug/net10.0/wwwroot/_framework/Restaurant.Client.q7040ayrng.pdb
 /home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/bin/Debug/net10.0/wwwroot/_framework/dotnet.js
 /home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/bin/Debug/net10.0/wwwroot/_framework/blazor.webassembly.js.gz
 /home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/bin/Debug/net10.0/wwwroot/_framework/Blazored.LocalStorage.12n6dz54qr.wasm.gz
@@ -422,8 +422,8 @@
 /home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/bin/Debug/net10.0/wwwroot/_framework/icudt_EFIGS.tptq2av103.dat.gz
 /home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/bin/Debug/net10.0/wwwroot/_framework/icudt_no_CJK.lfu7j35m59.dat.gz
 /home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/bin/Debug/net10.0/wwwroot/_framework/Microsoft.DotNet.HotReload.WebAssembly.Browser.3o7yr60r40.wasm.gz
-/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/bin/Debug/net10.0/wwwroot/_framework/Restaurant.Client.zsirbqjv29.wasm.gz
-/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/bin/Debug/net10.0/wwwroot/_framework/Restaurant.Client.goxxmk5idd.pdb.gz
+/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/bin/Debug/net10.0/wwwroot/_framework/Restaurant.Client.diksi8i9ru.wasm.gz
+/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/bin/Debug/net10.0/wwwroot/_framework/Restaurant.Client.q7040ayrng.pdb.gz
 /home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/bin/Debug/net10.0/wwwroot/_framework/dotnet.js.gz
 /home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/bin/Debug/net10.0/Restaurant.Client.staticwebassets.runtime.json
 /home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/bin/Debug/net10.0/Restaurant.Client.staticwebassets.endpoints.json
@@ -861,6 +861,7 @@
 /home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/obj/Debug/net10.0/dotnet.js
 /home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/obj/Debug/net10.0/compressed/nhvtstl5ba-{0}-p2tktok1gl-p2tktok1gl.gz
 /home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/obj/Debug/net10.0/compressed/xgcxykokwc-{0}-30jij7fdiu-30jij7fdiu.gz
+/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/obj/Debug/net10.0/compressed/c7omsuuott-{0}-0xns85j3mv-0xns85j3mv.gz
 /home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/obj/Debug/net10.0/compressed/wwf8gvonv2-{0}-958z1vx7fr-958z1vx7fr.gz
 /home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/obj/Debug/net10.0/compressed/z58vv8s23s-{0}-12n6dz54qr-12n6dz54qr.gz
 /home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/obj/Debug/net10.0/compressed/rzgchpac83-{0}-wp5b4xwrtz-wp5b4xwrtz.gz
@@ -1071,9 +1072,9 @@
 /home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/obj/Debug/net10.0/compressed/7yzltu2691-{0}-tptq2av103-tptq2av103.gz
 /home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/obj/Debug/net10.0/compressed/cmsnvi9zct-{0}-lfu7j35m59-lfu7j35m59.gz
 /home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/obj/Debug/net10.0/compressed/zf0lymtv13-{0}-3o7yr60r40-3o7yr60r40.gz
-/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/obj/Debug/net10.0/compressed/vxzbpzt6op-{0}-zsirbqjv29-zsirbqjv29.gz
-/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/obj/Debug/net10.0/compressed/pqhhmyhveu-{0}-goxxmk5idd-goxxmk5idd.gz
-/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/obj/Debug/net10.0/compressed/qzumlknhvu-{0}-oy6iut7fbt-oy6iut7fbt.gz
+/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/obj/Debug/net10.0/compressed/vxzbpzt6op-{0}-diksi8i9ru-diksi8i9ru.gz
+/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/obj/Debug/net10.0/compressed/pqhhmyhveu-{0}-q7040ayrng-q7040ayrng.gz
+/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/obj/Debug/net10.0/compressed/qzumlknhvu-{0}-i48a0cuvk6-i48a0cuvk6.gz
 /home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/obj/Debug/net10.0/staticwebassets.build.json
 /home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/obj/Debug/net10.0/staticwebassets.build.json.cache
 /home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/obj/Debug/net10.0/staticwebassets.development.json

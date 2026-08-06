@@ -5,7 +5,7 @@ var e=!1;const t=async()=>WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,
   "mainAssemblyName": "Restaurant.Client",
   "applicationEnvironment": "Development",
   "resources": {
-    "hash": "sha256-3PlVb6oUj2APSbYgtJeYB20dcC4tGZg733VT93VCpio=",
+    "hash": "sha256-mEa8VewCxJ+O12H27o52HsZziDV70LVACNJZeB6p38I=",
     "jsModuleNative": [
       {
         "name": "dotnet.native.puryxhmhq9.js"
@@ -1254,16 +1254,16 @@ var e=!1;const t=async()=>WebAssembly.validate(new Uint8Array([0,97,115,109,1,0,
       },
       {
         "virtualPath": "Restaurant.Client.wasm",
-        "name": "Restaurant.Client.zsirbqjv29.wasm",
-        "hash": "sha256-DeV/zxpNxaSQmwkOyhQTQSeDerExv0s0NnCCJDeanJk=",
+        "name": "Restaurant.Client.diksi8i9ru.wasm",
+        "hash": "sha256-1Sg5bAAWboMEtpjZqjLYpkW3a0fHzvwUc/lB47VABa8=",
         "cache": "force-cache"
       }
     ],
     "pdb": [
       {
         "virtualPath": "Restaurant.Client.pdb",
-        "name": "Restaurant.Client.goxxmk5idd.pdb",
-        "hash": "sha256-QGFyJ6QxdWTesQ1WJDkfIkAj5bhVd4BGe28wAFlboLU=",
+        "name": "Restaurant.Client.q7040ayrng.pdb",
+        "hash": "sha256-FiKF2QWYbTFq18YazOs8zpaKT9S9HtL11EfDA8cmXyI=",
         "cache": "force-cache"
       }
     ],
