@@ -33,14 +33,6 @@ build_property.EnableCodeStyleSeverity =
 build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/Layout/AuthLayout.razor]
-build_metadata.AdditionalFiles.TargetPath = TGF5b3V0L0F1dGhMYXlvdXQucmF6b3I=
-build_metadata.AdditionalFiles.CssScope = 
-
-[/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/Pages/AddProductModal.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQWRkUHJvZHVjdE1vZGFsLnJhem9y
-build_metadata.AdditionalFiles.CssScope = 
-
 [/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/Pages/AdminDashboard.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXMvQWRtaW5EYXNoYm9hcmQucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
@@ -69,10 +61,6 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXMvTG9naW4ucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/Pages/NotFound.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXMvTm90Rm91bmQucmF6b3I=
-build_metadata.AdditionalFiles.CssScope = 
-
 [/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/Pages/Notifications.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXMvTm90aWZpY2F0aW9ucy5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
@@ -85,22 +73,18 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUGF5bWVudHMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
-[/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/Pages/Products.razor]
-build_metadata.AdditionalFiles.TargetPath = UGFnZXMvUHJvZHVjdHMucmF6b3I=
+[/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/Shared/AuthLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL0F1dGhMYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/Shared/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL01haW5MYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/Shared/RedirectToLogin.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkL1JlZGlyZWN0VG9Mb2dpbi5yYXpvcg==
 build_metadata.AdditionalFiles.CssScope = 
 
 [/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/_Imports.razor]
 build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
-
-[/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/Layout/AdminNavMenu.razor]
-build_metadata.AdditionalFiles.TargetPath = TGF5b3V0L0FkbWluTmF2TWVudS5yYXpvcg==
-build_metadata.AdditionalFiles.CssScope = b-ey47ysfkb9
-
-[/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/Layout/MainLayout.razor]
-build_metadata.AdditionalFiles.TargetPath = TGF5b3V0L01haW5MYXlvdXQucmF6b3I=
-build_metadata.AdditionalFiles.CssScope = b-dbgsw6sxgm
-
-[/home/codexdev24/vscode_project/RestaurantSystem/Restaurant.Client/Layout/NavMenu.razor]
-build_metadata.AdditionalFiles.TargetPath = TGF5b3V0L05hdk1lbnUucmF6b3I=
-build_metadata.AdditionalFiles.CssScope = b-aoebzij2v4
