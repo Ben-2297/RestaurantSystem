@@ -1,0 +1,323 @@
+@page "/orders"
+@attribute [Authorize(Roles = "Admin")]
+@inject HttpClient Http
+@inject IJSRuntime JS
+@inject ILocalStorageService LocalStorage
+@implements IDisposable
+
+<div class="container-fluid p-4" style="background-color: #E0E0E0; min-height: 100vh;">
+    <div class="d-flex justify-content-between align-items-start mb-4">
+        <div>
+            <h3 class="font-weight-bold text-dark m-0">Orders</h3>
+            <h5 class="text-secondary font-weight-bold m-0" style="font-size: 1.1rem;">Table</h5>
+        </div>
+
+        <div class="d-flex gap-2">
+            <button class="btn btn-info text-white font-weight-bold btn-sm p-2 d-flex align-items-center gap-2 @(currentFilter == "Order" ? "border-dark shadow" : "border-0")"
+                    @onclick='() => SetFilter("Order")' style="background-color: #00B4D8; border-radius: 4px; font-size: 0.85rem;">
+                Order <span class="badge bg-dark text-white font-weight-bold">@orders.Count(o => o.Status == "Order")</span>
+            </button>
+            <button class="btn btn-info text-white font-weight-bold btn-sm p-2 d-flex align-items-center gap-2 @(currentFilter == "Confirm" ? "border-dark shadow" : "border-0")"
+                    @onclick='() => SetFilter("Confirm")' style="background-color: #00B4D8; border-radius: 4px; font-size: 0.85rem;">
+                Confirm <span class="badge bg-dark text-white font-weight-bold">@orders.Count(o => o.Status == "Confirm")</span>
+            </button>
+            <button class="btn btn-info text-white font-weight-bold btn-sm p-2 d-flex align-items-center gap-2 @(currentFilter == "Cooking" ? "border-dark shadow" : "border-0")"
+                    @onclick='() => SetFilter("Cooking")' style="background-color: #00B4D8; border-radius: 4px; font-size: 0.85rem;">
+                Cooking <span class="badge bg-dark text-white font-weight-bold">@orders.Count(o => o.Status == "Cooking")</span>
+            </button>
+            <button class="btn btn-info text-white font-weight-bold btn-sm p-2 d-flex align-items-center gap-2 @(currentFilter == "Pick-up" ? "border-dark shadow" : "border-0")"
+                    @onclick='() => SetFilter("Pick-up")' style="background-color: #00B4D8; border-radius: 4px; font-size: 0.85rem;">
+                Pick up <span class="badge bg-dark text-white font-weight-bold">@orders.Count(o => o.Status == "Pick-up")</span>
+            </button>
+            @if (currentFilter != "All")
+            {
+                <button class="btn btn-sm btn-dark font-weight-bold" @onclick='() => SetFilter("All")' style="border-radius: 4px;">Clear Filter</button>
+            }
+        </div>
+    </div>
+
+    <div class="card border-0 p-4 shadow-sm" style="background-color: #D2D2D2; border-radius: 4px;">
+        <div class="table-responsive">
+            <table class="table align-middle m-0" style="border-collapse: collapse;">
+                <thead>
+                    <tr class="border-bottom border-secondary text-dark pb-3">
+                        <th class="p-3 font-weight-bold">orderID</th>
+                        <th class="p-3 font-weight-bold">Customer</th>
+                        <th class="p-3 font-weight-bold text-center">Image</th>
+                        <th class="p-3 font-weight-bold">Products</th>
+                        <th class="p-3 font-weight-bold text-center">Quantity</th>
+                        <th class="p-3 font-weight-bold text-center">Portion</th>
+                        <th class="p-3 font-weight-bold">Orderdate</th>
+                        <th class="p-3 font-weight-bold text-center">Status Update</th>
+                        <th class="p-3 font-weight-bold text-center">Paid</th>
+                        <th class="p-3 font-weight-bold text-center">Pickup Note</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in GetFilteredOrders())
+                    {
+                        <tr class="border-bottom border-secondary pb-3">
+                            <td class="p-3 font-weight-bold text-dark">#@order.Id</td>
+                            <td class="p-3 font-weight-bold text-dark">@order.CustomerName</td>
+                            <td class="p-3">
+                                @foreach (var product in order.Products)
+                                {
+                                    <div class="mb-2 d-flex justify-content-center">
+                                        <img src="@product.ImageUrl"
+                                             alt="@product.Name"
+                                             class="rounded object-fit-cover border"
+                                             style="width: 48px; height: 48px;"
+                                             onerror="this.src='https://via.placeholder.com/48';" />
+                                    </div>
+                                }
+                            </td>
+                            <td class="p-3">
+                                @foreach (var product in order.Products)
+                                {
+                                    <div class="d-flex align-items-start mb-2">
+                                        <div>
+                                            <small class="text-primary d-block font-weight-bold" style="font-size: 0.75rem;">@product.Category</small>
+                                            <div class="font-weight-bold text-dark">@product.Name</div>
+                                        </div>
+                                    </div>
+                                }
+                            </td>
+                            <td class="p-3 font-weight-bold text-dark text-center">
+                                @foreach (var product in order.Products)
+                                {
+                                    <div class="mb-2">@product.Quantity</div>
+                                }
+                            </td>
+                            <td class="p-3 font-weight-bold text-dark text-center">
+                                @foreach (var product in order.Products)
+                                {
+                                    <div class="mb-2">@(product.IsHalfOption ? "Half" : "Full")</div>
+                                }
+                            </td>
+                            <td class="p-3 font-weight-bold text-dark">@order.OrderDate.ToString("yyyy-MM-dd")</td>
+                            <td class="p-3 text-center">
+                                @if (order.Status.Equals("Order", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <button class="btn btn-sm btn-light border-dark font-weight-bold shadow-sm px-3" @onclick="() => AdvanceStatus(order)" style="border-radius: 4px;">Confirm Availability</button>
+                                }
+                                else if (order.Status.Equals("Confirm", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <span class="text-warning font-weight-bold small">Waiting for customer payment</span>
+                                }
+                                else if (order.Status.Equals("Cooking", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <button class="btn btn-sm btn-dark text-white font-weight-bold shadow-sm px-3" @onclick="() => AdvanceStatus(order)" style="border-radius: 4px;">Ready to Pick up</button>
+                                }
+                                else if (order.Status.Equals("Pick-up", StringComparison.OrdinalIgnoreCase))
+                                {
+                                    <span class="text-success font-weight-bold small"><span class="oi oi-check"></span> Ready for Pick-up</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted font-weight-bold small">@order.Status</span>
+                                }
+                            </td>
+                            <td class="p-3 text-center">
+                                <input type="checkbox"
+                                       checked="@order.IsPaid"
+                                       disabled
+                                       title="Payment is set by customer checkout."
+                                       class="form-check-input border-dark shadow-sm"
+                                       style="transform: scale(1.1);" />
+                            </td>
+                            <td class="p-3 text-center font-weight-bold text-dark">
+                                @order.PickupNote
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string currentFilter = "All";
+    private List<OrderItem> orders = new();
+    private readonly HashSet<int> knownOrderIds = new();
+    private PeriodicTimer? refreshTimer;
+    private CancellationTokenSource? refreshCts;
+    private bool isSoundEnabled = true;
+    private string selectedSoundType = "chime";
+    private double soundVolume = 0.75;
+
+    private const string NotificationSettingsKey = "notificationSettings";
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadNotificationSettingsAsync();
+        await LoadOrdersAsync(playAlertForNewOrders: false);
+        StartAutoRefresh();
+    }
+
+    private void StartAutoRefresh()
+    {
+        refreshCts = new CancellationTokenSource();
+        refreshTimer = new PeriodicTimer(TimeSpan.FromSeconds(10));
+        _ = Task.Run(() => PollOrdersAsync(refreshCts.Token));
+    }
+
+    private async Task PollOrdersAsync(CancellationToken cancellationToken)
+    {
+        if (refreshTimer is null)
+        {
+            return;
+        }
+
+        try
+        {
+            while (await refreshTimer.WaitForNextTickAsync(cancellationToken))
+            {
+                await LoadOrdersAsync(playAlertForNewOrders: true);
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+            // Stop polling cleanly when component is disposed.
+        }
+    }
+
+    private async Task LoadOrdersAsync(bool playAlertForNewOrders)
+    {
+        await LoadNotificationSettingsAsync();
+
+        var response = await Http.GetFromJsonAsync<List<OrderApiResponse>>("api/orders/admin");
+        if (response is null) return;
+
+        var incomingOrderIds = response.Select(o => o.Id).ToHashSet();
+        var hasNewOrders = incomingOrderIds.Except(knownOrderIds).Any();
+
+        if (playAlertForNewOrders && hasNewOrders && isSoundEnabled)
+        {
+            var audioPath = $"audio/{selectedSoundType}.mp3";
+            await JS.InvokeVoidAsync("playSystemNotificationSound", audioPath, soundVolume);
+        }
+
+        knownOrderIds.Clear();
+        foreach (var id in incomingOrderIds)
+        {
+            knownOrderIds.Add(id);
+        }
+
+        orders = response.Select(o => new OrderItem
+        {
+            Id = o.Id,
+            CustomerName = o.CustomerName,
+            Products = o.Items.Select(i => new OrderProductItem
+            {
+                Name = i.ProductName,
+                Category = i.Category,
+                Quantity = i.Quantity,
+                IsHalfOption = i.IsHalfOption,
+                ImageUrl = string.IsNullOrWhiteSpace(i.ImageUrl) ? "https://via.placeholder.com/48" : i.ImageUrl
+            }).ToList(),
+            OrderDate = o.CreatedAt,
+            Status = o.Status,
+            IsPaid = o.IsPaid,
+            PickupNote = string.IsNullOrWhiteSpace(o.DeliveryAddress) ? "No pickup note provided." : o.DeliveryAddress,
+        }).ToList();
+    }
+
+    private void SetFilter(string filter) => currentFilter = filter;
+
+    private IEnumerable<OrderItem> GetFilteredOrders()
+    {
+        if (currentFilter == "All") return orders;
+        return orders.Where(o => o.Status.Equals(currentFilter, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private async Task AdvanceStatus(OrderItem order)
+    {
+        var nextStatus = order.Status.Equals("Order", StringComparison.OrdinalIgnoreCase)
+            ? "Confirm"
+            : order.Status.Equals("Cooking", StringComparison.OrdinalIgnoreCase)
+                ? "Pick-up"
+                : string.Empty;
+
+        if (string.IsNullOrWhiteSpace(nextStatus))
+        {
+            return;
+        }
+
+        var response = await Http.PatchAsJsonAsync($"api/orders/{order.Id}/status", new { status = nextStatus });
+        if (response.IsSuccessStatusCode)
+        {
+            order.Status = nextStatus;
+            await LoadOrdersAsync(playAlertForNewOrders: false);
+        }
+    }
+
+    private async Task LoadNotificationSettingsAsync()
+    {
+        var settings = await LocalStorage.GetItemAsync<NotificationSettings>(NotificationSettingsKey);
+        if (settings is null)
+        {
+            return;
+        }
+
+        isSoundEnabled = settings.IsSoundEnabled;
+        selectedSoundType = string.IsNullOrWhiteSpace(settings.SoundType) ? "chime" : settings.SoundType;
+        var clampedVolume = Math.Clamp(settings.VolumeLevel, 0, 100);
+        soundVolume = clampedVolume / 100.0;
+    }
+
+    public void Dispose()
+    {
+        refreshCts?.Cancel();
+        refreshTimer?.Dispose();
+        refreshCts?.Dispose();
+    }
+
+    public class OrderApiResponse
+    {
+        public int Id { get; set; }
+        public string CustomerName { get; set; } = string.Empty;
+        public bool IsPaid { get; set; }
+        public string Status { get; set; } = "Order";
+        public string DeliveryAddress { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+        public List<OrderApiLineItem> Items { get; set; } = new();
+    }
+
+    public class OrderApiLineItem
+    {
+        public string ProductName { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public int Quantity { get; set; }
+        public bool IsHalfOption { get; set; }
+        public string ImageUrl { get; set; } = string.Empty;
+    }
+
+    public class OrderItem
+    {
+        public int Id { get; set; }
+        public string CustomerName { get; set; } = string.Empty;
+        public List<OrderProductItem> Products { get; set; } = new();
+        public DateTime OrderDate { get; set; }
+        public string Status { get; set; } = "Order";
+        public bool IsPaid { get; set; }
+        public string PickupNote { get; set; } = "No pickup note provided.";
+    }
+
+    public class OrderProductItem
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public string ImageUrl { get; set; } = string.Empty;
+        public int Quantity { get; set; }
+        public bool IsHalfOption { get; set; }
+    }
+
+    private sealed class NotificationSettings
+    {
+        public bool IsSoundEnabled { get; set; } = true;
+        public string SoundType { get; set; } = "chime";
+        public int VolumeLevel { get; set; } = 75;
+    }
+}

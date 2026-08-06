@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Restaurant.App.CheckoutPage"
+             Title="Checkout"
+             BackgroundColor="White">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+
+            <Label Text="Submit Order for Admin Confirmation" FontSize="22" FontAttributes="Bold" TextColor="#1f2937"/>
+            <Label Text="Your cart items will first be reviewed by the admin. When approved, payment opens in secure Stripe Checkout." FontSize="13" TextColor="Gray"/>
+
+            <CollectionView x:Name="OrderSummaryCollectionView" HeightRequest="220">
+                <CollectionView.EmptyView>
+                    <Label Text="No items in cart yet." FontSize="14" TextColor="Gray" HorizontalOptions="Center" VerticalOptions="Center"/>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border StrokeShape="RoundRectangle 10" BackgroundColor="#f8fafc" Padding="12" Margin="0,0,0,8">
+                            <Grid ColumnDefinitions="*, Auto" ColumnSpacing="8">
+                                <VerticalStackLayout>
+                                    <Label Text="{Binding Product.Name}" FontAttributes="Bold" TextColor="#111827"/>
+                                    <Label Text="{Binding Portion}" FontSize="12" TextColor="Gray"/>
+                                    <Label Text="{Binding Quantity, StringFormat='Qty: {0}'}" FontSize="12" TextColor="Gray"/>
+                                </VerticalStackLayout>
+                                <Label Grid.Column="1" Text="{Binding FormattedSubtotal}" FontAttributes="Bold" TextColor="#2563eb" VerticalOptions="Center"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Label Text="Pickup Details" FontAttributes="Bold" FontSize="16" TextColor="#111827"/>
+            <Label Text="Pickup location: Restaurant address" FontSize="12" TextColor="Gray"/>
+            <Entry x:Name="FullNameEntry" Placeholder="Full Name" TextColor="Black" PlaceholderColor="Gray"/>
+            <Entry x:Name="PhoneEntry" Placeholder="Phone Number" Keyboard="Telephone" TextColor="Black" PlaceholderColor="Gray"/>
+            <Entry x:Name="EmailEntry" Placeholder="Email Address" Keyboard="Email" TextColor="Black" PlaceholderColor="Gray"/>
+            <Editor x:Name="PickupNoteEditor" Placeholder="Pickup note (optional): pickup time, packaging changes, or special instructions" AutoSize="TextChanges" HeightRequest="70" TextColor="Black" PlaceholderColor="Gray"/>
+
+            <VerticalStackLayout Spacing="10">
+                <Label x:Name="OrderStatusLabel" Text="Status: No order submitted yet" FontAttributes="Bold" TextColor="#111827"/>
+                <Button x:Name="SubmitOrderButton" Text="Submit Order for Approval" Clicked="OnSubmitOrderClicked" BackgroundColor="#0f766e" TextColor="White" CornerRadius="10"/>
+            </VerticalStackLayout>
+
+            <Border StrokeShape="RoundRectangle 12" BackgroundColor="#f3f4f6" Padding="14" StrokeThickness="0">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Secure Card Payment" FontAttributes="Bold" FontSize="16" TextColor="#111827"/>
+                    <Label Text="You will be redirected to Stripe to enter your card details securely." FontSize="12" TextColor="Gray"/>
+                    <Button x:Name="PayNowButton" Text="Proceed to Stripe Checkout" Clicked="OnPayNowClicked" BackgroundColor="#2563eb" TextColor="White" CornerRadius="10" IsEnabled="False"/>
+                    <Button x:Name="RecheckPaymentButton" Text="Recheck Payment Status" Clicked="OnRecheckPaymentClicked" BackgroundColor="#0f766e" TextColor="White" CornerRadius="10"/>
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

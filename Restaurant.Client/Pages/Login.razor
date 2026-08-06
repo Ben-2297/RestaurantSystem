@@ -1,0 +1,98 @@
+@page "/"
+@layout AuthLayout
+@using Restaurant.Client.Services
+@inject HttpClient Http
+@inject ILocalStorageService LocalStorage
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<div class="d-flex justify-content-center align-items-center vh-100 w-100">
+    <div class="card border-0 p-4 shadow-sm" style="width: 420px; max-width: 90%; background-color: #D2D2D2; border-radius: 4px;">
+        <div class="card-body">
+            
+            @* LOGO DISPLAY *@
+            <div class="text-center mb-4">
+                <img src="images/logo.png" alt="Restaurant Logo" class="img-fluid" style="max-height: 100px; width: auto;" />
+            </div>
+            
+            <EditForm Model="@loginModel" OnValidSubmit="HandleLogin">
+                <div class="form-group mb-3">
+                    <label class="form-label text-dark font-weight-bold small text-uppercase">Username</label>
+                    <InputText @bind-Value="loginModel.Username" class="form-control border-0 p-3 shadow-sm bg-white" placeholder="Enter username" style="border-radius: 4px;" />
+                </div>
+                
+                <div class="form-group mb-4">
+                    <label class="form-label text-dark font-weight-bold small text-uppercase">Password</label>
+                    <InputText type="password" @bind-Value="loginModel.Password" class="form-control border-0 p-3 shadow-sm bg-white" placeholder="Enter password" style="border-radius: 4px;" />
+                </div>
+
+                @if (!string.IsNullOrEmpty(errorMessage))
+                {
+                    <div class="alert alert-danger py-2 mb-3 text-center small border-0 font-weight-bold" style="border-radius: 4px;">
+                        @errorMessage
+                    </div>
+                }
+
+                <button type="submit" class="btn btn-dark w-100 py-3 font-weight-bold text-uppercase border-0 shadow-sm mt-2" style="border-radius: 4px; letter-spacing: 0.5px;">
+                    Sign In
+                </button>
+            </EditForm>
+        </div>
+    </div>
+</div>
+
+@code {
+    private UserLoginDto loginModel = new();
+    private string errorMessage = "";
+
+    private async Task HandleLogin()
+    {
+        errorMessage = "";
+        var response = await Http.PostAsJsonAsync("api/auth/login", loginModel);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var loginResponse = await response.Content.ReadFromJsonAsync<LoginResponseDto>();
+
+            if (loginResponse is not null && !string.IsNullOrWhiteSpace(loginResponse.Token))
+            {
+                await LocalStorage.SetItemAsync("authToken", loginResponse.Token);
+
+                if (AuthStateProvider is CustomAuthStateProvider customAuth)
+                {
+                    customAuth.MarkUserAsAuthenticated(loginResponse.Token);
+                }
+                else
+                {
+                    await AuthStateProvider.GetAuthenticationStateAsync();
+                }
+
+                Navigation.NavigateTo("/home");
+            }
+            else
+            {
+                errorMessage = "Login response was invalid.";
+            }
+        }
+        else
+        {
+            errorMessage = "Invalid login credentials.";
+        }
+    }
+
+    public class UserLoginDto 
+    { 
+        public string Username { get; set; } = string.Empty; 
+        public string Password { get; set; } = string.Empty; 
+        public string ClientType { get; set; } = "Web";
+    }
+
+    public class LoginResponseDto
+    {
+        public string Token { get; set; } = string.Empty;
+        public string FullName { get; set; } = string.Empty;
+        public string Address { get; set; } = string.Empty;
+        public string PhoneNumber { get; set; } = string.Empty;
+        public bool IsVerified { get; set; }
+    }
+}

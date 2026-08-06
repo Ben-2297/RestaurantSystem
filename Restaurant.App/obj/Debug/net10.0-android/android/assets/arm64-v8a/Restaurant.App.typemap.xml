@@ -1,0 +1,10 @@
+<api type="debug" assembly-name="Restaurant.App" mvid="ac619924a7824e9babb4c5c443d0a4c0">
+  <java-to-managed>
+    <entry java-name="crc640810eb2ce152262e/MainActivity" managed-name="Restaurant.App.MainActivity, Restaurant.App" managed-type-token-id="33554465" />
+    <entry java-name="crc640810eb2ce152262e/MainApplication" managed-name="Restaurant.App.MainApplication, Restaurant.App" managed-type-token-id="33554466" />
+  </java-to-managed>
+  <managed-to-java>
+    <entry java-name="crc640810eb2ce152262e/MainActivity" managed-name="Restaurant.App.MainActivity, Restaurant.App" managed-type-token-id="33554465" />
+    <entry java-name="crc640810eb2ce152262e/MainApplication" managed-name="Restaurant.App.MainApplication, Restaurant.App" managed-type-token-id="33554466" />
+  </managed-to-java>
+</api>

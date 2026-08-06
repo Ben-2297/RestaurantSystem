@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:Restaurant.App"
+             x:Class="Restaurant.App.FiestaCateringChatPage"
+             Title="Fiesta Catering Chat"
+             BackgroundColor="White">
+
+    <Grid RowDefinitions="Auto, *, Auto" Padding="16" RowSpacing="10">
+        <VerticalStackLayout Grid.Row="0" Spacing="2">
+            <Label Text="Fiesta Catering" FontAttributes="Bold" FontSize="22" TextColor="#1f2937"/>
+            <Label Text="Chat with our admin team for bulk orders and custom packages." FontSize="12" TextColor="#6b7280"/>
+        </VerticalStackLayout>
+
+        <CollectionView Grid.Row="1" x:Name="ChatCollectionView" ItemsSource="{Binding Messages}">
+            <CollectionView.EmptyView>
+                <Label Text="Start your catering inquiry below." TextColor="#6b7280" HorizontalOptions="Center" VerticalOptions="Center"/>
+            </CollectionView.EmptyView>
+            <CollectionView.ItemTemplate>
+                <DataTemplate x:DataType="local:FiestaChatMessage">
+                    <VerticalStackLayout Margin="0,4">
+                        <Border StrokeShape="RoundRectangle 12"
+                                BackgroundColor="{Binding BubbleColor}"
+                                StrokeThickness="0"
+                                Padding="10"
+                                HorizontalOptions="{Binding Alignment}">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="{Binding Sender}" FontSize="11" TextColor="#6b7280"/>
+                                <Label Text="{Binding Text}" FontSize="14" TextColor="#111827"/>
+                                <Label Text="{Binding TimeStamp}" FontSize="10" TextColor="#9ca3af"/>
+                            </VerticalStackLayout>
+                        </Border>
+                    </VerticalStackLayout>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+        </CollectionView>
+
+        <Grid Grid.Row="2" ColumnDefinitions="*, Auto" ColumnSpacing="8">
+            <Editor x:Name="MessageEditor"
+                    Grid.Column="0"
+                    Placeholder="Type your catering request..."
+                    AutoSize="TextChanges"
+                    MaximumHeightRequest="120"
+                    BackgroundColor="#f3f4f6"
+                    TextColor="#111827"
+                    PlaceholderColor="#9ca3af"/>
+            <Button Grid.Column="1"
+                    Text="Send"
+                    Clicked="OnSendClicked"
+                    BackgroundColor="#0f766e"
+                    TextColor="White"
+                    CornerRadius="10"
+                    VerticalOptions="End"/>
+        </Grid>
+    </Grid>
+</ContentPage>

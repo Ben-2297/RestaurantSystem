@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Restaurant.App.AddToCartPage"
+             Title="Customize Order"
+             BackgroundColor="{StaticResource AppBackground}">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="20">
+
+            <Border HeightRequest="200" StrokeShape="RoundRectangle 12" StrokeThickness="0">
+                <Image x:Name="ProductImage" Aspect="AspectFill"/>
+            </Border>
+
+            <Label x:Name="ProductNameLabel" FontSize="22" FontAttributes="Bold" TextColor="#2D3142"/>
+            <Label x:Name="ProductPriceLabel" FontSize="18" FontAttributes="Bold" TextColor="{StaticResource PrimaryBrand}"/>
+
+            <BoxView HeightRequest="1" Color="#E0E0E0"/>
+
+            <!-- PORTION SELECTION -->
+            <Label Text="Select Serving Size:" FontSize="15" FontAttributes="Bold" TextColor="#2D3142"/>
+            <VerticalStackLayout Spacing="8">
+                <RadioButton x:Name="FullPortionRadio" Content="Full Serving (Standard Price)" IsChecked="True" GroupName="PortionGroup"/>
+                <RadioButton x:Name="HalfPortionRadio" Content="Half Serving (50% Off)" GroupName="PortionGroup"/>
+            </VerticalStackLayout>
+
+            <BoxView HeightRequest="1" Color="#E0E0E0"/>
+
+            <!-- QUANTITY SELECTION -->
+            <Label Text="Select Quantity:" FontSize="15" FontAttributes="Bold" TextColor="#2D3142"/>
+            <HorizontalStackLayout Spacing="15" VerticalOptions="Center">
+                <Button Text="-" Clicked="OnDecreaseQuantityClicked" WidthRequest="44" HeightRequest="44" CornerRadius="22" BackgroundColor="#E0E0E0" TextColor="Black" FontSize="18"/>
+                <Label x:Name="QuantityLabel" Text="1" FontSize="20" FontAttributes="Bold" VerticalOptions="Center"/>
+                <Button Text="+" Clicked="OnIncreaseQuantityClicked" WidthRequest="44" HeightRequest="44" CornerRadius="22" BackgroundColor="{StaticResource PrimaryBrand}" TextColor="White" FontSize="18"/>
+            </HorizontalStackLayout>
+
+            <!-- CONFIRM BUTTON -->
+            <Button Text="Add to Cart" 
+                    Clicked="OnConfirmAddToCartClicked" 
+                    Margin="0,20,0,0"
+                    BackgroundColor="{StaticResource PrimaryBrand}" 
+                    TextColor="White" 
+                    FontSize="16" 
+                    FontAttributes="Bold" 
+                    HeightRequest="50" 
+                    CornerRadius="12"/>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

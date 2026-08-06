@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Restaurant.App.CartPage"
+             Title="My Cart"
+             BackgroundColor="{StaticResource AppBackground}">
+
+    <Grid RowDefinitions="*, Auto" Padding="15">
+
+        <VerticalStackLayout Grid.Row="0" Spacing="10">
+            <Grid ColumnDefinitions="Auto, *, Auto" VerticalOptions="Center">
+                <CheckBox x:Name="SelectAllCheckBox"
+                          Grid.Column="0"
+                          Color="{StaticResource PrimaryBrand}"
+                          VerticalOptions="Center"
+                          CheckedChanged="OnSelectAllChanged" />
+                <Label Grid.Column="1"
+                       Text="Select All"
+                       FontSize="14"
+                       FontAttributes="Bold"
+                       VerticalOptions="Center"
+                       TextColor="#2D3142" />
+                  <VerticalStackLayout Grid.Column="2" Spacing="0" HorizontalOptions="End" VerticalOptions="Center">
+                      <Label x:Name="SelectedSummaryLabel"
+                          Text="0 selected"
+                          FontSize="13"
+                          TextColor="Gray"
+                          HorizontalTextAlignment="End" />
+                      <Label x:Name="SelectedSubtotalLabel"
+                          Text="$0.00 selected"
+                          FontSize="12"
+                          TextColor="{StaticResource PrimaryBrand}"
+                          HorizontalTextAlignment="End" />
+                  </VerticalStackLayout>
+            </Grid>
+
+            <!-- CART ITEMS LIST -->
+            <CollectionView x:Name="CartItemsCollectionView">
+            <CollectionView.EmptyView>
+                <VerticalStackLayout HorizontalOptions="Center" VerticalOptions="Center" Spacing="10">
+                    <Label Text="🛒" FontSize="48" HorizontalOptions="Center"/>
+                    <Label Text="Your cart is empty" FontSize="18" FontAttributes="Bold" HorizontalOptions="Center"/>
+                </VerticalStackLayout>
+            </CollectionView.EmptyView>
+
+            <CollectionView.ItemTemplate>
+                <DataTemplate>
+                    <Border Margin="0,0,0,10" Padding="12" StrokeShape="RoundRectangle 10" StrokeThickness="0" BackgroundColor="White">
+                        <Grid ColumnDefinitions="Auto, 80, *, Auto" ColumnSpacing="12">
+
+                            <!-- Select Item -->
+                            <CheckBox Grid.Column="0"
+                                      IsChecked="{Binding IsSelected}"
+                                      VerticalOptions="Center"
+                                      Color="{StaticResource PrimaryBrand}"
+                                      CheckedChanged="OnItemSelectionChanged" />
+
+                            <!-- Product Image -->
+                            <Image Grid.Column="1" Source="{Binding Product.ImageUrl}" Aspect="AspectFill" HeightRequest="80" WidthRequest="80"/>
+
+                            <!-- Product Details (Name, Portion, Quantity, Price) -->
+                            <VerticalStackLayout Grid.Column="2" VerticalOptions="Center" Spacing="6">
+                                <Label Text="{Binding Product.Name}" FontAttributes="Bold" FontSize="16" TextColor="#2D3142"/>
+
+                                <Grid ColumnDefinitions="Auto, *" ColumnSpacing="8">
+                                    <Label Text="Portion" VerticalOptions="Center" FontSize="13" TextColor="Gray"/>
+                                    <Picker Grid.Column="1"
+                                            SelectedItem="{Binding PortionText}"
+                                            SelectedIndexChanged="OnPortionChanged"
+                                            FontSize="13"
+                                            Title="Select portion"
+                                            HeightRequest="40">
+                                        <Picker.ItemsSource>
+                                            <x:Array Type="{x:Type x:String}">
+                                                <x:String>Full</x:String>
+                                                <x:String>Half</x:String>
+                                            </x:Array>
+                                        </Picker.ItemsSource>
+                                    </Picker>
+                                </Grid>
+
+                                <Grid ColumnDefinitions="Auto, Auto, Auto, Auto" ColumnSpacing="8" VerticalOptions="Center">
+                                    <Label Text="Qty" VerticalOptions="Center" FontSize="13" TextColor="Gray"/>
+                                    <Button Grid.Column="1"
+                                        Text="−"
+                                            FontSize="14"
+                                            WidthRequest="32"
+                                            HeightRequest="32"
+                                            CornerRadius="8"
+                                        BackgroundColor="#F1F5F9"
+                                        TextColor="#1E293B"
+                                            CommandParameter="{Binding .}"
+                                            Clicked="OnDecreaseQuantityClicked" />
+                                    <Border Grid.Column="2"
+                                        BackgroundColor="#F8FAFC"
+                                        Stroke="#CBD5E1"
+                                        StrokeThickness="1"
+                                        StrokeShape="RoundRectangle 8"
+                                        Padding="10,4">
+                                    <Label Text="{Binding Quantity}" VerticalOptions="Center" HorizontalOptions="Center" FontSize="14" FontAttributes="Bold" TextColor="#0F172A"/>
+                                    </Border>
+                                    <Button Grid.Column="3"
+                                            Text="+"
+                                            FontSize="14"
+                                            WidthRequest="32"
+                                            HeightRequest="32"
+                                            CornerRadius="8"
+                                        BackgroundColor="#F1F5F9"
+                                        TextColor="#1E293B"
+                                            CommandParameter="{Binding .}"
+                                            Clicked="OnIncreaseQuantityClicked" />
+                                </Grid>
+
+                                <Label Text="{Binding FormattedSubtotal}" FontAttributes="Bold" FontSize="15" TextColor="{StaticResource PrimaryBrand}"/>
+                            </VerticalStackLayout>
+
+                            <!-- Remove Button -->
+                            <Button Grid.Column="3" 
+                                    Text="✕" 
+                                    TextColor="Red" 
+                                    BackgroundColor="Transparent" 
+                                    FontSize="18"
+                                    VerticalOptions="Center"
+                                    CommandParameter="{Binding .}"
+                                    Clicked="OnRemoveItemClicked"/>
+                        </Grid>
+                    </Border>
+                </DataTemplate>
+            </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+
+        <!-- FOOTER: TOTAL & CHECKOUT -->
+        <VerticalStackLayout Grid.Row="1" Spacing="10" Margin="0,10,0,0">
+            <BoxView HeightRequest="1" Color="#E0E0E0"/>
+            <Grid ColumnDefinitions="*, Auto">
+                <Label Text="Total Amount:" FontSize="18" FontAttributes="Bold" VerticalOptions="Center"/>
+                <Label x:Name="TotalPriceLabel" Grid.Column="1" Text="$0.00" FontSize="20" FontAttributes="Bold" TextColor="{StaticResource PrimaryBrand}"/>
+            </Grid>
+
+            <Button Text="Proceed to Checkout" 
+                    Clicked="OnCheckoutClicked" 
+                    BackgroundColor="{StaticResource PrimaryBrand}" 
+                    TextColor="White" 
+                    FontAttributes="Bold" 
+                    HeightRequest="50" 
+                    CornerRadius="10"/>
+        </VerticalStackLayout>
+
+    </Grid>
+</ContentPage>

@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Restaurant.App</name>
+    </assembly>
+    <members>
+        <member name="M:Restaurant.App.ProfilePage.FetchLiveVerificationStatusAsync(System.Int32)">
+            <summary>
+            Attempts to query the live API for the latest user database fields
+            </summary>
+        </member>
+        <member name="M:Restaurant.App.ProfilePage.UpdateVerificationBadge(System.Boolean)">
+            <summary>
+            Renders the status badge based on IsVerified boolean
+            </summary>
+        </member>
+        <member name="M:Restaurant.App.ProfilePage.OnLogoutClicked(System.Object,System.EventArgs)">
+            <summary>
+            Clears session data and returns the user back to the main view without forcing login
+            </summary>
+        </member>
+        <member name="T:Restaurant.App.Resource">
+            <summary>
+            Android Resource Designer class.
+            Exposes the Android Resource designer assembly into the project Namespace.
+            </summary>
+        </member>
+    </members>
+</doc>

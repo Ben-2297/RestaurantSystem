@@ -1,0 +1,231 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:local="clr-namespace:Restaurant.App"
+             x:Class="Restaurant.App.MainPage"
+             BackgroundColor="{StaticResource AppBackground}"
+             NavigationPage.HasNavigationBar="False">
+
+    <Grid RowDefinitions="*, Auto">
+        
+        <!-- Main Content Area Scrollable -->
+        <ScrollView Grid.Row="0" VerticalScrollBarVisibility="Never">
+            <VerticalStackLayout Spacing="0" Padding="15,20,15,20">
+                
+                <!-- HEADER: Location & Profile -->
+                <Grid ColumnDefinitions="*, Auto" Margin="5,10,5,15">
+                    <VerticalStackLayout Grid.Column="0" Spacing="2">
+                        <Label Text="Restaurant Location" FontSize="11" TextColor="{StaticResource TextMuted}" />
+                        <!-- Location Link to Google Maps -->
+                        <HorizontalStackLayout Spacing="5">
+                            <HorizontalStackLayout.GestureRecognizers>
+                                <TapGestureRecognizer Tapped="OnLocationTapped"/>
+                            </HorizontalStackLayout.GestureRecognizers>
+                            <Label Text="📍 8702 W Golf Rd, Niles, IL 60714" 
+                                   FontSize="14" 
+                                   FontAttributes="Bold" 
+                                   TextColor="{StaticResource PrimaryBrand}" 
+                                   LineBreakMode="TailTruncation"
+                                   MaxLines="1"/>
+                            <Label Text="▼" FontSize="10" TextColor="{StaticResource PrimaryBrand}" VerticalOptions="Center"/>
+                        </HorizontalStackLayout>
+                    </VerticalStackLayout>
+                    
+                    <!-- Profile Header Icon mapped to OnProfileHeaderIconTapped -->
+                    <Border Grid.Column="1" WidthRequest="40" HeightRequest="40" StrokeShape="RoundRectangle 20" BackgroundColor="{StaticResource ElementGray}" StrokeThickness="0">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnProfileHeaderIconTapped"/>
+                        </Border.GestureRecognizers>
+                        <Label Text="👤" HorizontalOptions="Center" VerticalOptions="Center" FontSize="18"/>
+                    </Border>
+                </Grid>
+
+                <!-- SEARCH BAR -->
+                <Border Padding="15,0" HeightRequest="50" StrokeShape="RoundRectangle 25" StrokeThickness="0" BackgroundColor="{StaticResource ElementGray}" Margin="0,0,0,20">
+                    <Grid ColumnDefinitions="Auto, *">
+                        <Label Grid.Column="0" Text="🔍" FontSize="16" VerticalOptions="Center" Margin="0,0,10,0" TextColor="{StaticResource TextMuted}"/>
+                        <Entry Grid.Column="1" Placeholder="Search for food, cuisines, or dishes..." PlaceholderColor="#666666" TextColor="{StaticResource TextDark}" VerticalOptions="Center" FontSize="14"/>
+                    </Grid>
+                </Border>
+
+                <!-- HERO/PROMO BANNER -->
+                <Border HeightRequest="150" StrokeShape="RoundRectangle 20" StrokeThickness="0" BackgroundColor="{StaticResource PrimaryBrand}" Margin="0,0,0,25" Padding="20">
+                    <Grid ColumnDefinitions="*, Auto">
+                        <VerticalStackLayout Grid.Column="0" VerticalOptions="Center" Spacing="5">
+                            <Label Text="Sariling Atin" FontSize="24" FontAttributes="Bold" TextColor="White" />
+                            <Label Text="Taste traditional Filipino flavors!" FontSize="12" TextColor="#D1D1D1" LineBreakMode="WordWrap"/>
+                        </VerticalStackLayout>
+                        <Label Grid.Column="1" Text="🍲" FontSize="70" VerticalOptions="Center" HorizontalOptions="End" Margin="10,0,0,0"/>
+                    </Grid>
+                </Border>
+
+                <!-- MAIN SECTIONS: Services Grid Layout -->
+                <Label Text="Our Services" FontSize="18" FontAttributes="Bold" TextColor="{StaticResource TextDark}" Margin="5,0,0,15"/>
+                
+                <Grid ColumnDefinitions="*, *" ColumnSpacing="15" Margin="0,0,0,25">
+                    <!-- Pick-Up Service -->
+                    <Border Grid.Column="0" Padding="15" StrokeShape="RoundRectangle 15" StrokeThickness="0" BackgroundColor="{StaticResource ElementGray}" HeightRequest="110">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnPickupTapped"/>
+                        </Border.GestureRecognizers>
+                        <Grid RowDefinitions="*, Auto">
+                            <Label Text="🛍️" FontSize="32" HorizontalOptions="End" VerticalOptions="Start"/>
+                            <VerticalStackLayout Grid.Row="1" Spacing="2">
+                                <Label Text="Pick-Up" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource TextDark}"/>
+                                <Label Text="Skip the wait" FontSize="11" TextColor="{StaticResource TextMuted}"/>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Border>
+
+                    <!-- Catering/Bulk Orders -->
+                    <Border Grid.Column="1" Padding="15" StrokeShape="RoundRectangle 15" StrokeThickness="0" BackgroundColor="{StaticResource ElementGray}" HeightRequest="110">
+                        <Border.GestureRecognizers>
+                            <TapGestureRecognizer Tapped="OnFiestaCateringTapped"/>
+                        </Border.GestureRecognizers>
+                        <Grid RowDefinitions="*, Auto">
+                            <Label Text="🐖" FontSize="32" HorizontalOptions="End" VerticalOptions="Start"/>
+                            <VerticalStackLayout Grid.Row="1" Spacing="2">
+                                <Label Text="Fiesta Catering" FontSize="14" FontAttributes="Bold" TextColor="{StaticResource TextDark}"/>
+                                <Label Text="Bulk orders" FontSize="11" TextColor="{StaticResource TextMuted}"/>
+                            </VerticalStackLayout>
+                        </Grid>
+                    </Border>                    
+                </Grid>
+
+                <!-- MENU CATEGORIES HEADER -->
+                <Label Text="Menu Categories" FontSize="22" FontAttributes="Bold" TextColor="#2D3142" Margin="0,15,0,5"/>
+
+                <ActivityIndicator x:Name="MenuLoadingIndicator" IsRunning="True" Color="{StaticResource PrimaryBrand}" HeightRequest="40" />
+
+                <!-- Main Categories Container -->
+                <VerticalStackLayout x:Name="CategoriesStackLayout" Spacing="25">
+                    <BindableLayout.ItemTemplate>
+                        <DataTemplate x:DataType="local:CategoryGroup">
+                            <VerticalStackLayout Spacing="10">
+
+                                <!-- Category Header Title -->
+                                <Label Text="{Binding CategoryName}" 
+                                       FontSize="20" 
+                                       FontAttributes="Bold" 
+                                       TextColor="{StaticResource PrimaryBrand}" />
+                                <BoxView HeightRequest="1" Color="#D1D1D1" Margin="0,0,0,5" />
+
+                                <!-- Empty Category Message -->
+                                <Label Text="Unavailable at the moment" 
+                                       IsVisible="{Binding IsEmpty}" 
+                                       FontSize="14" 
+                                       FontAttributes="Italic" 
+                                       TextColor="#777777" 
+                                       Margin="10,5,0,10" />
+
+                                <!-- Category Product List -->
+                                <VerticalStackLayout IsVisible="{Binding HasItems}" 
+                                                     BindableLayout.ItemsSource="{Binding Items}" 
+                                                     Spacing="12">
+                                    <BindableLayout.ItemTemplate>
+                                        <DataTemplate x:DataType="local:MenuItem">
+                                            <!-- Product Row Card -->
+                                            <Border Padding="10" BackgroundColor="White" StrokeShape="RoundRectangle 12" StrokeThickness="0">
+                                                <Grid ColumnDefinitions="90, *, Auto" ColumnSpacing="12">
+
+                                                    <!-- Product Image -->
+                                                    <Border Grid.Column="0" 
+                                                            HeightRequest="80" 
+                                                            WidthRequest="80" 
+                                                            StrokeShape="RoundRectangle 10" 
+                                                            StrokeThickness="0">
+                                                        <Image Source="{Binding ImageUrl}" Aspect="AspectFill" HeightRequest="80" WidthRequest="80"/>
+                                                    </Border>
+
+                                                    <!-- Product Details -->
+                                                    <VerticalStackLayout Grid.Column="1" VerticalOptions="Center" Spacing="4">
+                                                        <Label Text="{Binding Name}" 
+                                                               FontSize="16" 
+                                                               FontAttributes="Bold" 
+                                                               TextColor="#2D3142"/>
+                                                        <Label Text="{Binding FormattedPrice}" 
+                                                               FontSize="15" 
+                                                               FontAttributes="Bold" 
+                                                               TextColor="{StaticResource PrimaryBrand}"/>
+                                                    </VerticalStackLayout>
+
+                                                    <!-- Add to Cart Action Button -->
+                                                    <Button Grid.Column="2" 
+                                                            Text="Add to Cart" 
+                                                            Clicked="OnAddToCartClicked" 
+                                                            CommandParameter="{Binding .}" 
+                                                            BackgroundColor="{StaticResource PrimaryBrand}" 
+                                                            TextColor="White" 
+                                                            FontAttributes="Bold" 
+                                                            FontSize="12" 
+                                                            CornerRadius="18" 
+                                                            HeightRequest="38" 
+                                                            Padding="12,0" 
+                                                            VerticalOptions="Center"/>
+
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </BindableLayout.ItemTemplate>
+                                </VerticalStackLayout>
+
+                            </VerticalStackLayout>
+                        </DataTemplate>
+                    </BindableLayout.ItemTemplate>
+                </VerticalStackLayout>
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- FLOATING BOTTOM NAV BAR -->
+        <Border Grid.Row="1" HeightRequest="65" StrokeShape="RoundRectangle 0" StrokeThickness="1" Stroke="#CCCCCC" BackgroundColor="{StaticResource ElementGray}" Padding="10,5">
+            <Grid ColumnDefinitions="*, *, *, *" HorizontalOptions="Fill">
+
+                <!-- 1. HOME BUTTON -->
+                <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center" Spacing="2">
+                    <VerticalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnHomeTabTapped" />
+                    </VerticalStackLayout.GestureRecognizers>
+                    <Label Text="🏠" FontSize="20" HorizontalOptions="Center" />
+                    <Label Text="Home" FontSize="11" FontAttributes="Bold" TextColor="{StaticResource PrimaryBrand}" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+
+                <!-- 2. ORDERS BUTTON -->
+                <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center" Spacing="2">
+                    <VerticalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnOrdersTabTapped" />
+                    </VerticalStackLayout.GestureRecognizers>
+                    <Label Text="📋" FontSize="20" HorizontalOptions="Center" />
+                    <Label Text="Orders" FontSize="11" TextColor="{StaticResource TextDark}" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+
+                <!-- 3. PAYMENT BUTTON -->
+                <VerticalStackLayout Grid.Column="2" HorizontalOptions="Center" Spacing="2">
+                    <VerticalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnPaymentTabTapped" />
+                    </VerticalStackLayout.GestureRecognizers>
+                    <Label Text="💳" FontSize="20" HorizontalOptions="Center" />
+                    <Label Text="Payment" FontSize="11" TextColor="{StaticResource TextDark}" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+
+                <!-- 4. CART BUTTON -->
+                <VerticalStackLayout Grid.Column="3" HorizontalOptions="Center" Spacing="2">
+                    <VerticalStackLayout.GestureRecognizers>
+                        <TapGestureRecognizer Tapped="OnCartTabTapped" />
+                    </VerticalStackLayout.GestureRecognizers>
+                    <!-- FIXED: Replaced CornerRadius="10" with StrokeShape="RoundRectangle 10" -->
+                    <Border BackgroundColor="{StaticResource PrimaryBrand}" 
+                            WidthRequest="42" 
+                            HeightRequest="36" 
+                            StrokeShape="RoundRectangle 10" 
+                            StrokeThickness="0" 
+                            HorizontalOptions="Center">
+                        <Label Text="🛒" FontSize="16" HorizontalOptions="Center" VerticalOptions="Center" />
+                    </Border>
+                    <Label Text="Cart" FontSize="11" TextColor="{StaticResource TextDark}" HorizontalOptions="Center" />
+                </VerticalStackLayout>
+
+            </Grid>
+        </Border>
+        
+    </Grid>
+</ContentPage>

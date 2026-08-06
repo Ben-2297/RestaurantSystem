@@ -1,0 +1,177 @@
+@page "/notifications"
+@attribute [Authorize(Roles = "Admin")]
+@inject IJSRuntime JS
+@inject ILocalStorageService LocalStorage
+
+<div class="container-fluid p-4" style="background-color: #E0E0E0; min-height: 100vh;">
+    
+    <h3 class="font-weight-bold text-dark mb-4">Notification</h3>
+
+    <div class="card border-0 p-5 shadow-sm" style="background-color: #D2D2D2; border-radius: 4px; max-width: 800px;">
+        
+        <div class="d-flex align-items-center gap-2 mb-4 text-dark">
+            <span class="oi oi-bell" style="font-size: 1.4rem;" aria-hidden="true"></span>
+            <h5 class="m-0 font-weight-bold text-uppercase" style="letter-spacing: 0.5px; font-size: 1.1rem;">Notification Sounds</h5>
+        </div>
+
+        <div class="row g-4 align-items-center mt-2">
+            <div class="col-md-5 d-flex align-items-center">
+                <div class="form-check form-switch d-flex align-items-center gap-3 p-0 m-0">
+                    <input class="form-switch form-check-input border-dark shadow-sm" 
+                           type="checkbox" 
+                           id="enableSoundToggle" 
+                           @bind="isSoundEnabled" 
+                           @bind:after="OnSoundToggleChanged"
+                           style="width: 2.5rem; height: 1.25rem; cursor: pointer; margin: 0;" />
+                    <label class="form-check-label text-dark font-weight-bold" for="enableSoundToggle" style="cursor: pointer; font-size: 1rem;">
+                        Enable sound Notification
+                    </label>
+                </div>
+            </div>
+
+            <div class="col-md-7">
+                <div class="d-flex align-items-center gap-2" style="max-width: 250px;">
+                    <span class="oi oi-volume-high text-dark" aria-hidden="true"></span>
+                    <select class="form-select border-0 p-2 shadow-sm bg-white text-dark font-weight-bold" 
+                            @bind="selectedSoundType" 
+                            @bind:after="OnSoundTypeChanged"
+                            disabled="@(!isSoundEnabled)"
+                            style="border-radius: 4px; font-size: 0.9rem; cursor: @(isSoundEnabled ? "pointer" : "not-allowed");">
+                        <option value="chime">Chime</option>
+                        <option value="ding">Ding Alert</option>
+                        <option value="digital">Digital Ping</option>
+                        <option value="bell">Classic Bell</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="col-12 mt-4">
+                <div class="row align-items-center">
+                    <div class="col-md-3">
+                        <label class="text-dark font-weight-bold m-0" style="font-size: 1rem;">Notification Volume</label>
+                    </div>
+                    <div class="col-md-6 d-flex align-items-center gap-2">
+                        <span class="oi oi-volume-low text-secondary small" aria-hidden="true"></span>
+                        
+                        <input type="range" 
+                               class="form-range w-100 accent-dark" 
+                               min="0" max="100" 
+                               value="@volumeLevel" 
+                               @onchange="UpdateVolume"
+                               disabled="@(!isSoundEnabled)"
+                               style="cursor: @(isSoundEnabled ? "pointer" : "not-allowed");" />
+                        
+                        <span class="oi oi-volume-high text-secondary small" aria-hidden="true"></span>
+                    </div>
+                    
+                    <div class="col-md-2">
+                        <span class="badge bg-dark text-white font-weight-bold shadow-sm p-2 px-3" style="border-radius: 4px; font-size: 0.85rem;">
+                            @(isSoundEnabled ? $"{volumeLevel}%" : "Muted")
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end mt-5 pt-3 border-top border-secondary gap-2">
+            <button class="btn btn-outline-dark font-weight-bold text-uppercase px-3" @onclick="PlayAudioPreview" disabled="@(!isSoundEnabled)" style="border-radius: 4px;">
+                <span class="oi oi-media-play me-1"></span> Test Sound
+            </button>
+            <button class="btn btn-dark font-weight-bold text-uppercase px-4 shadow-sm" @onclick="SaveNotificationSettings" style="border-radius: 4px; letter-spacing: 0.5px;">
+                Save Changes
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<style>
+    input[type="range"]::-webkit-slider-thumb { background: #212529 !important; }
+    input[type="range"]::-moz-range-thumb { background: #212529 !important; }
+</style>
+
+@code {
+    private const string NotificationSettingsKey = "notificationSettings";
+    private bool isSoundEnabled = true;
+    private string selectedSoundType = "chime";
+    private int volumeLevel = 75;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var settings = await LocalStorage.GetItemAsync<NotificationSettings>(NotificationSettingsKey);
+        if (settings is null)
+        {
+            return;
+        }
+
+        isSoundEnabled = settings.IsSoundEnabled;
+        selectedSoundType = string.IsNullOrWhiteSpace(settings.SoundType) ? "chime" : settings.SoundType;
+        volumeLevel = Math.Clamp(settings.VolumeLevel, 0, 100);
+    }
+
+    private async Task OnSoundToggleChanged()
+    {
+        await SaveSettingsToStorageAsync();
+
+        if (isSoundEnabled)
+        {
+            await PlayAudioPreview();
+        }
+    }
+
+    private async Task OnSoundTypeChanged()
+    {
+        await SaveSettingsToStorageAsync();
+        await PlayAudioPreview();
+    }
+
+    private async Task UpdateVolume(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var newVolume))
+        {
+            volumeLevel = newVolume;
+            await SaveSettingsToStorageAsync();
+            // Instantly preview volume changes as the slider drops or rises
+            await PlayAudioPreview();
+        }
+    }
+
+    private async Task PlayAudioPreview()
+    {
+        if (!isSoundEnabled) return;
+
+        // Formulate path targets mapping down into your root assets folder (e.g., wwwroot/audio/chime.mp3)
+        string audioFilePath = $"audio/{selectedSoundType}.mp3";
+        
+        // Convert integer scale (0-100) down to browser HTML5 decimal ranges (0.0 to 1.0)
+        double decimalVolume = volumeLevel / 100.0;
+
+        // Invoke the globally accessible helper function script written in Step 2
+        await JS.InvokeVoidAsync("playSystemNotificationSound", audioFilePath, decimalVolume);
+    }
+
+    private async Task SaveNotificationSettings()
+    {
+        await SaveSettingsToStorageAsync();
+        await PlayAudioPreview(); // Success chime feedback audio ring trigger
+    }
+
+    private async Task SaveSettingsToStorageAsync()
+    {
+        var settings = new NotificationSettings
+        {
+            IsSoundEnabled = isSoundEnabled,
+            SoundType = selectedSoundType,
+            VolumeLevel = volumeLevel
+        };
+
+        await LocalStorage.SetItemAsync(NotificationSettingsKey, settings);
+    }
+
+    private sealed class NotificationSettings
+    {
+        public bool IsSoundEnabled { get; set; } = true;
+        public string SoundType { get; set; } = "chime";
+        public int VolumeLevel { get; set; } = 75;
+    }
+}

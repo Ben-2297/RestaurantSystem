@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       xmlns:local="clr-namespace:Restaurant.App"
+       x:Class="Restaurant.App.AppShell"
+       Shell.FlyoutBehavior="Disabled"
+       Shell.NavBarIsVisible="False"
+       Title="Restaurant.App">
+
+    <!-- By removing <TabBar> and using a direct ShellContent, -->
+    <!-- the native bottom menu bar completely disappears! -->
+    <ShellContent Title="Home"
+                  ContentTemplate="{DataTemplate local:MainPage}"
+                  Route="MainPage" />
+
+</Shell>

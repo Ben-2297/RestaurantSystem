@@ -1,0 +1,145 @@
+@page "/payments"
+@attribute [Authorize(Roles = "Admin")]
+@inject HttpClient Http
+
+<div class="container-fluid p-4" style="background-color: #E0E0E0; min-height: 100vh;">
+    <div class="row align-items-center mb-4 g-3">
+        <div class="col-md-4">
+            <h3 class="font-weight-bold text-dark m-0">Payments</h3>
+        </div>
+
+        <div class="col-md-4 ms-auto">
+            <div class="input-group shadow-sm" style="border-radius: 4px; overflow: hidden;">
+                <span class="input-group-text border-0 bg-white text-muted"><span class="oi oi-magnifying-glass"></span></span>
+                <input type="text" class="form-control border-0 p-2 text-dark bg-white" placeholder="Search Payments..." @bind-value="searchQuery" @bind-value:event="oninput" />
+            </div>
+        </div>
+
+        <div class="col-md-2">
+            <select class="form-select border-0 p-2 shadow-sm bg-white text-dark" @bind="selectedMethodFilter" style="border-radius: 4px; font-size: 0.9rem;">
+                <option value="All">Filter: All</option>
+                <option value="Credit Card">Credit Card</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="d-flex gap-2 mb-4">
+        <button class="btn font-weight-bold btn-sm px-3 py-2 shadow-sm @(currentStatusFilter == "All" ? "btn-dark text-white" : "btn-light text-dark")"
+                @onclick='() => SetStatusFilter("All")' style="border-radius: 4px;">
+            All (@transactions.Count)
+        </button>
+        <button class="btn font-weight-bold btn-sm px-3 py-2 text-white shadow-sm @(currentStatusFilter == "Paid" ? "btn-success" : "")"
+                @onclick='() => SetStatusFilter("Paid")' style="background-color: #28A745; border: 0; border-radius: 4px;">
+            <span class="oi oi-credit-card me-1" aria-hidden="true"></span> Paid (@transactions.Count(t => t.Status == "Paid"))
+        </button>
+    </div>
+
+    <div class="card border-0 p-4 shadow-sm" style="background-color: #D2D2D2; border-radius: 4px;">
+        <div class="table-responsive">
+            <table class="table align-middle m-0" style="border-collapse: collapse;">
+                <thead>
+                    <tr class="border-bottom border-secondary text-dark pb-3">
+                        <th class="p-3 font-weight-bold">Transaction #</th>
+                        <th class="p-3 font-weight-bold">OrderID</th>
+                        <th class="p-3 font-weight-bold">Customer</th>
+                        <th class="p-3 font-weight-bold">Payment Method</th>
+                        <th class="p-3 font-weight-bold">Total</th>
+                        <th class="p-3 font-weight-bold">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var txn in GetFilteredTransactions())
+                    {
+                        <tr class="border-bottom border-secondary pb-3">
+                            <td class="p-3 font-weight-bold text-dark">#@txn.TransactionId</td>
+                            <td class="p-3 font-weight-bold text-secondary">#@txn.OrderId</td>
+                            <td class="p-3 font-weight-bold text-dark">@txn.CustomerName</td>
+                            <td class="p-3 text-dark font-weight-bold">
+                                <span class="oi oi-credit-card me-2 text-muted" aria-hidden="true"></span>@txn.PaymentMethod
+                            </td>
+                            <td class="p-3 font-weight-bold text-dark">$@txn.TotalAmount</td>
+                            <td class="p-3">
+                                <span class="badge text-white font-weight-bold bg-success" style="border-radius: 4px; padding: 6px 12px; font-size: 0.75rem;">
+                                    @txn.Status
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string searchQuery = "";
+    private string selectedMethodFilter = "All";
+    private string currentStatusFilter = "All";
+    private List<TransactionItem> transactions = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPaymentsAsync();
+    }
+
+    private async Task LoadPaymentsAsync()
+    {
+        var response = await Http.GetFromJsonAsync<List<PaymentApiResponse>>("api/payments/admin");
+        if (response is null) return;
+
+        transactions = response.Select(t => new TransactionItem
+        {
+            TransactionId = t.Id,
+            OrderId = t.OrderId,
+            CustomerName = t.CustomerName,
+            PaymentMethod = t.PaymentMethod,
+            TotalAmount = t.Amount,
+            Status = t.Status
+        }).ToList();
+    }
+
+    private void SetStatusFilter(string filter) => currentStatusFilter = filter;
+
+    private IEnumerable<TransactionItem> GetFilteredTransactions()
+    {
+        var filtered = transactions.AsEnumerable();
+
+        if (currentStatusFilter != "All")
+        {
+            filtered = filtered.Where(t => t.Status.Equals(currentStatusFilter, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (selectedMethodFilter != "All")
+        {
+            filtered = filtered.Where(t => t.PaymentMethod.Equals(selectedMethodFilter, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(searchQuery))
+        {
+            filtered = filtered.Where(t => t.CustomerName.Contains(searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                                           t.TransactionId.ToString().Contains(searchQuery));
+        }
+
+        return filtered;
+    }
+
+    public class PaymentApiResponse
+    {
+        public int Id { get; set; }
+        public int OrderId { get; set; }
+        public string CustomerName { get; set; } = string.Empty;
+        public string PaymentMethod { get; set; } = string.Empty;
+        public decimal Amount { get; set; }
+        public string Status { get; set; } = "Paid";
+    }
+
+    public class TransactionItem
+    {
+        public int TransactionId { get; set; }
+        public int OrderId { get; set; }
+        public string CustomerName { get; set; } = string.Empty;
+        public string PaymentMethod { get; set; } = string.Empty;
+        public decimal TotalAmount { get; set; }
+        public string Status { get; set; } = "Paid";
+    }
+}

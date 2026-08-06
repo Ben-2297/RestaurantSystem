@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Restaurant.App.PaymentHistoryPage"
+             Title="Payment History"
+             BackgroundColor="White">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="12">
+            <Label Text="Payment History" FontSize="22" FontAttributes="Bold" TextColor="#111827"/>
+            <Label Text="Your customer card payments are stored here after checkout approval." FontSize="13" TextColor="Gray"/>
+
+            <CollectionView x:Name="PaymentsCollectionView">
+                <CollectionView.EmptyView>
+                    <Label Text="No payments yet." FontSize="14" TextColor="Gray" HorizontalOptions="Center" VerticalOptions="Center"/>
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Padding="12" BackgroundColor="#f8fafc" StrokeShape="RoundRectangle 12" Margin="0,0,0,10">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="{Binding OrderId, StringFormat='Order #{0}'}" FontAttributes="Bold" FontSize="16" TextColor="#111827"/>
+                                <Label Text="{Binding PaymentMethod}" FontSize="12" TextColor="Gray"/>
+                                <Label Text="{Binding Amount, StringFormat='Amount: ${0:F2}'}" FontAttributes="Bold" FontSize="14" TextColor="#2563eb"/>
+                                <Label Text="{Binding Status}" FontAttributes="Bold" FontSize="13" TextColor="#0f766e"/>
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,0 +1,151 @@
+@inject HttpClient Http
+
+@if (IsOpen)
+{
+    <div class="modal fade show d-block" tabindex="-1" style="background-color: rgba(0, 0, 0, 0.5); overflow-y: auto;">
+        <div class="modal-dialog modal-dialog-centered modal-md">
+            <div class="modal-content border-0 p-3 shadow" style="background-color: #E0E0E0; border-radius: 4px;">
+                
+                <div class="modal-header border-bottom border-secondary d-flex justify-content-between align-items-center pb-2">
+                    <h5 class="modal-title font-weight-bold text-dark">
+                        @(EditingItem == null ? "Add Inventory Stock Item" : $"Edit Item: {EditingItem.Name}")
+                    </h5>
+                    <button type="button" class="btn-close border-0 bg-transparent text-dark h4 m-0 p-0" @onclick="CloseModal">×</button>
+                </div>
+
+                <div class="modal-body py-3">
+                    <EditForm Model="@formModel" OnValidSubmit="HandleValidSubmit">
+                        <div class="row g-3">
+                            <!-- Item Name -->
+                            <div class="col-12 mb-2">
+                                <label class="form-label font-weight-bold text-dark small text-uppercase">Item Name</label>
+                                <InputText @bind-Value="formModel.Name" class="form-control border-0 p-3 shadow-sm bg-white" placeholder="e.g., Soy Sauce, Garlic Powder" style="border-radius: 4px;" required />
+                            </div>
+
+                            <!-- Category -->
+                            <div class="col-12 mb-2">
+                                <label class="form-label font-weight-bold text-dark small text-uppercase">Category</label>
+                                <InputText @bind-Value="formModel.Category" class="form-control border-0 p-3 shadow-sm bg-white" placeholder="e.g., Red Meat, Seafood" style="border-radius: 4px;" required/>
+                            </div>
+
+                            <!-- Stock Amount & Unit Row -->
+                            <div class="col-6 mb-2">
+                                <label class="form-label font-weight-bold text-dark small text-uppercase">Current Stock Amount</label>
+                                <InputNumber @bind-Value="formModel.StockAmount" class="form-control border-0 p-3 shadow-sm bg-white" style="border-radius: 4px;" required />
+                            </div>
+
+                            <div class="col-6 mb-2">
+                                <label class="form-label font-weight-bold text-dark small text-uppercase">Price Per Unit ($)</label>
+                                <InputNumber @bind-Value="formModel.UnitPrice" class="form-control border-0 p-3 shadow-sm bg-white" step="0.01" min="0" style="border-radius: 4px;" required />
+                            </div>
+
+                            <div class="col-6 mb-2">
+                                <label class="form-label font-weight-bold text-dark small text-uppercase">Measurement Unit</label>
+                                <InputSelect @bind-Value="formModel.Unit" class="form-select border-0 p-3 shadow-sm bg-white" style="border-radius: 4px;">
+                                    <option value="kg">kg (Kilograms)</option>
+                                    <option value="lb">lb (Pounds)</option>
+                                    <option value="g">g (Grams)</option>
+                                    <option value="L">L (Liters)</option>
+                                </InputSelect>
+                            </div>
+
+                            <!-- Alert Thresholds Row -->
+                            <div class="col-6 mb-2">
+                                <label class="form-label font-weight-bold text-warning small text-uppercase">Low Stock Alert Value</label>
+                                <InputNumber @bind-Value="formModel.LowStockThreshold" class="form-control border-0 p-3 shadow-sm bg-white" placeholder="e.g., 5" style="border-radius: 4px;" required />
+                            </div>
+
+                            <div class="col-6 mb-2">
+                                <label class="form-label font-weight-bold text-danger small text-uppercase">Add Stock Alert Value</label>
+                                <InputNumber @bind-Value="formModel.AddStockThreshold" class="form-control border-0 p-3 shadow-sm bg-white" placeholder="e.g., 2" style="border-radius: 4px;" required />
+                            </div>
+
+                            <!-- Administrative Toggle Override -->
+                            <div class="col-12 mb-2">
+                                <label class="form-label font-weight-bold text-dark small text-uppercase">Availability Status</label>
+                                <InputSelect @bind-Value="availabilitySelection" class="form-select border-0 p-3 shadow-sm bg-white" style="border-radius: 4px;">
+                                    <option value="true">Active / Listed</option>
+                                    <option value="false">Disabled / Discontinued</option>
+                                </InputSelect>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 border-top border-secondary pt-3 mt-4">
+                            <button type="button" class="btn btn-outline-dark font-weight-bold px-4" @onclick="CloseModal" style="border-radius: 4px;">Cancel</button>
+                            <button type="submit" class="btn btn-dark font-weight-bold text-uppercase px-4 shadow-sm" style="border-radius: 4px; letter-spacing: 0.5px;">
+                                @(EditingItem == null ? "Create Item" : "Save Changes")
+                            </button>
+                        </div>
+                    </EditForm>
+                </div>
+
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+    [Parameter] public Pages.Inventory.InventoryItem? EditingItem { get; set; }
+    [Parameter] public EventCallback OnSave { get; set; }
+
+    private Pages.Inventory.InventoryItem formModel = new();
+    private string availabilitySelection = "true";
+
+    protected override void OnParametersSet()
+    {
+        if (IsOpen)
+        {
+            if (EditingItem == null)
+            {
+                formModel = new Pages.Inventory.InventoryItem 
+                { 
+                    Unit = "kg", 
+                    UnitPrice = 0m,
+                    IsAvailable = true, 
+                    StockAmount = 0,
+                    LowStockThreshold = 5,
+                    AddStockThreshold = 2
+                };
+                availabilitySelection = "true";
+            }
+            else
+            {
+                formModel = new Pages.Inventory.InventoryItem
+                {
+                    Id = EditingItem.Id,
+                    Name = EditingItem.Name,
+                    Category = EditingItem.Category,
+                    StockAmount = EditingItem.StockAmount,
+                    UnitPrice = EditingItem.UnitPrice,
+                    Unit = EditingItem.Unit,
+                    IsAvailable = EditingItem.IsAvailable,
+                    LowStockThreshold = EditingItem.LowStockThreshold,
+                    AddStockThreshold = EditingItem.AddStockThreshold,
+                    CreatedAt = EditingItem.CreatedAt
+                };
+                availabilitySelection = EditingItem.IsAvailable ? "true" : "false";
+            }
+        }
+    }
+
+    private async Task CloseModal() => await OnClose.InvokeAsync();
+
+    private async Task HandleValidSubmit()
+    {
+        formModel.IsAvailable = bool.Parse(availabilitySelection);
+
+        if (EditingItem == null)
+        {
+            formModel.CreatedAt = DateTime.Now;
+            await Http.PostAsJsonAsync("api/inventory", formModel);
+        }
+        else
+        {
+            await Http.PutAsJsonAsync($"api/inventory/{formModel.Id}", formModel);
+        }
+
+        await OnSave.InvokeAsync();
+    }
+}

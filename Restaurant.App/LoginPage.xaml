@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="Restaurant.App.LoginPage"
+             BackgroundColor="{StaticResource AppBackground}"
+             NavigationPage.HasNavigationBar="False">
+
+    <ScrollView VerticalOptions="Center">
+        <VerticalStackLayout Spacing="25" Padding="30" HorizontalOptions="Center" WidthRequest="360">
+            
+            <!-- Logo Holder -->
+            <Image Source="logo.png" 
+                   HeightRequest="100" 
+                   HorizontalOptions="Center" 
+                   Margin="0,0,0,20"/>
+
+            <!-- Email Input Field (Maps to Username column in DB behind the scenes) -->
+            <Border Padding="15,0" HeightRequest="55" StrokeShape="RoundRectangle 27" StrokeThickness="0" BackgroundColor="{StaticResource ElementGray}">
+                <Grid ColumnDefinitions="*, Auto">
+                    <Entry x:Name="EmailEntry" 
+                           Grid.Column="0" 
+                           Placeholder="Email" 
+                           PlaceholderColor="#555555" 
+                           TextColor="{StaticResource TextDark}" 
+                           VerticalOptions="Center" 
+                           Keyboard="Email"/>
+                    <Label Grid.Column="1" Text="👤" FontSize="18" VerticalOptions="Center" Margin="0,0,5,0"/>
+                </Grid>
+            </Border>
+
+            <!-- Password Input Field -->
+            <Border Padding="15,0" HeightRequest="55" StrokeShape="RoundRectangle 27" StrokeThickness="0" BackgroundColor="{StaticResource ElementGray}">
+                <Grid ColumnDefinitions="*, Auto">
+                    <Entry x:Name="PasswordEntry" 
+                           Grid.Column="0" 
+                           Placeholder="Password" 
+                           PlaceholderColor="#555555" 
+                           TextColor="{StaticResource TextDark}" 
+                           IsPassword="True" 
+                           VerticalOptions="Center"/>
+                    <Label Grid.Column="1" Text="🔒" FontSize="18" VerticalOptions="Center" Margin="0,0,5,0"/>
+                </Grid>
+            </Border>
+
+            <!-- Activity Indicator for API Loading -->
+            <ActivityIndicator x:Name="LoginLoading" IsRunning="False" Color="{StaticResource PrimaryBrand}" HeightRequest="30"/>
+
+            <!-- Action Buttons Stack -->
+            <VerticalStackLayout Spacing="15" Margin="0,15,0,0" HorizontalOptions="Center" WidthRequest="160">
+                <Button Text="Login" 
+                        Clicked="OnLoginClicked"
+                        BackgroundColor="{StaticResource ElementGray}" 
+                        TextColor="{StaticResource TextDark}" 
+                        FontAttributes="Bold"
+                        CornerRadius="25" 
+                        HeightRequest="48"/>
+
+                <!-- FIXED: Added Clicked event handler to hook up navigation routing to RegisterPage -->
+                <Button Text="Sign up" 
+                        Clicked="OnSignUpButtonClicked"
+                        BackgroundColor="{StaticResource ElementGray}" 
+                        TextColor="{StaticResource TextDark}" 
+                        FontAttributes="Bold"
+                        CornerRadius="25" 
+                        HeightRequest="48"/>
+            </VerticalStackLayout>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

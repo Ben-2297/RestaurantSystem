@@ -1,0 +1,178 @@
+@inject HttpClient Http
+
+<div class="gemini-assistant-shell">
+    <button class="gemini-fab"
+            type="button"
+            title="Open Gemini insights assistant"
+            @onclick="OpenAssistant">
+        <span class="gemini-fab-icon">AI</span>
+        <span class="gemini-fab-label">Gemini</span>
+    </button>
+
+    @if (isOpen)
+    {
+        <div class="gemini-modal-backdrop" @onclick="CloseAssistant"></div>
+
+        <div class="gemini-modal" role="dialog" aria-modal="true" aria-label="Gemini insights assistant">
+            <div class="gemini-modal-header">
+                <div>
+                    <h5 class="m-0">Gemini Admin Assistant</h5>
+                    <small>Ask about sales, profit, expenses, and top menu trends</small>
+                </div>
+                <div class="d-flex gap-2">
+                    <button class="btn btn-sm btn-outline-light" type="button" @onclick="ResetChatAsync">New chat</button>
+                    <button class="btn btn-sm btn-outline-light" type="button" @onclick="CloseAssistant">Close</button>
+                </div>
+            </div>
+
+            <div class="gemini-chat-body">
+                @if (messages.Count == 0)
+                {
+                    <div class="gemini-empty-state">
+                        Try: "Show this week's sales and net profit" or "Top 5 menu items this month"
+                    </div>
+                }
+                else
+                {
+                    @foreach (var message in messages)
+                    {
+                        <div class="gemini-message-row @(message.IsUser ? "user" : "assistant")">
+                            <div class="gemini-message-bubble">
+                                @foreach (var line in message.Text.Split('\n'))
+                                {
+                                    <div>@line</div>
+                                }
+                            </div>
+                        </div>
+                    }
+                }
+
+                @if (isSending)
+                {
+                    <div class="gemini-message-row assistant">
+                        <div class="gemini-message-bubble">Thinking...</div>
+                    </div>
+                }
+            </div>
+
+            <div class="gemini-input-area">
+                <InputTextArea @bind-Value="userPrompt"
+                               class="form-control gemini-input"
+                               placeholder="Ask Gemini about the business metrics..."
+                               rows="3" />
+                <div class="d-flex justify-content-between align-items-center mt-2">
+                    <small class="text-muted">Admin-only insights chat</small>
+                    <button class="btn btn-dark" disabled="@isSending" type="button" @onclick="SendAsync">Send</button>
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool isOpen;
+    private bool isSending;
+    private string userPrompt = string.Empty;
+    private readonly List<ChatMessageViewModel> messages = new();
+
+    private void OpenAssistant()
+    {
+        isOpen = true;
+    }
+
+    private void CloseAssistant()
+    {
+        isOpen = false;
+    }
+
+    private async Task SendAsync()
+    {
+        var prompt = userPrompt.Trim();
+        if (string.IsNullOrWhiteSpace(prompt) || isSending)
+        {
+            return;
+        }
+
+        userPrompt = string.Empty;
+        messages.Add(new ChatMessageViewModel(prompt, true));
+        isSending = true;
+
+        try
+        {
+            var response = await Http.PostAsJsonAsync("api/admininsights/chat", new ChatRequestDto
+            {
+                Message = prompt
+            });
+
+            if (response.IsSuccessStatusCode)
+            {
+                var data = await response.Content.ReadFromJsonAsync<ChatResponseDto>();
+                var reply = data?.Reply?.Trim();
+                messages.Add(new ChatMessageViewModel(
+                    string.IsNullOrWhiteSpace(reply)
+                        ? "No response was returned by Gemini."
+                        : reply,
+                    false));
+            }
+            else
+            {
+                var error = await response.Content.ReadAsStringAsync();
+                messages.Add(new ChatMessageViewModel(
+                    $"Request failed ({(int)response.StatusCode}). {error}",
+                    false));
+            }
+        }
+        catch (Exception ex)
+        {
+            messages.Add(new ChatMessageViewModel($"Unable to contact the assistant. {ex.Message}", false));
+        }
+        finally
+        {
+            isSending = false;
+        }
+    }
+
+    private async Task ResetChatAsync()
+    {
+        messages.Clear();
+
+        try
+        {
+            await Http.PostAsync("api/admininsights/chat/reset", content: null);
+        }
+        catch
+        {
+        }
+    }
+
+    private sealed record ChatRequestDto
+    {
+        public string Message { get; init; } = string.Empty;
+    }
+
+    private sealed record ChatResponseDto
+    {
+        public string Reply { get; init; } = string.Empty;
+        public DateTime TimestampUtc { get; init; }
+        public InsightsSnapshotDto? Snapshot { get; init; }
+    }
+
+    private sealed record InsightsSnapshotDto
+    {
+        public decimal TotalSales { get; init; }
+        public decimal PaidSales { get; init; }
+        public decimal TotalExpense { get; init; }
+        public decimal NetProfit { get; init; }
+        public int OrderCount { get; init; }
+        public List<TopMenuItemDto> TopMenu { get; init; } = new();
+    }
+
+    private sealed record TopMenuItemDto
+    {
+        public string ProductName { get; init; } = string.Empty;
+        public int Quantity { get; init; }
+        public decimal Revenue { get; init; }
+    }
+
+    private sealed record ChatMessageViewModel(string Text, bool IsUser);
+}

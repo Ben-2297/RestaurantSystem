@@ -1,0 +1,15 @@
+﻿@page "/home"
+@attribute [Authorize]
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <AdminDashboard />
+        <AdminGeminiAssistant />
+    </Authorized>
+</AuthorizeView>
+
+<AuthorizeView Roles="KitchenStaff">
+    <Authorized>
+        <KitchenDashboard />
+    </Authorized>
+</AuthorizeView>

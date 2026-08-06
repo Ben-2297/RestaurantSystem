@@ -1,0 +1,271 @@
+@inject HttpClient Http
+@implements IDisposable
+
+<div class="container-fluid p-4" style="background: linear-gradient(180deg, #EAEAEA 0%, #E0E0E0 100%); min-height: 100vh;">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="font-weight-bold text-dark m-0">Dashboard</h3>
+            <h5 class="text-secondary font-weight-bold m-0" style="font-size: 1.05rem;">Live financial overview</h5>
+        </div>
+        <small class="text-muted font-weight-bold">Auto-refreshing live data</small>
+    </div>
+
+    @if (isLoading)
+    {
+        <div class="text-center py-5 text-muted font-weight-bold">
+            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+            Loading dashboard...
+        </div>
+    }
+    else
+    {
+        <div class="row g-4 mb-4">
+            <div class="col-md-4">
+                <div class="card border-0 p-4 shadow-sm h-100" style="background-color: #D2D2D2; border-radius: 4px;">
+                    <h5 class="text-dark mb-2">Total Expense</h5>
+                    <h3 class="font-weight-bold mb-2">@totalExpense.ToString("C2")</h3>
+                    <small class="text-muted">Inventory value based on stock and unit price</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 p-4 shadow-sm h-100" style="background-color: #D2D2D2; border-radius: 4px;">
+                    <h5 class="text-dark mb-2">Total Sales</h5>
+                    <h3 class="font-weight-bold mb-2">@totalSales.ToString("C2")</h3>
+                    <small class="text-muted">All paid and pending order totals</small>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card border-0 p-4 shadow-sm h-100" style="background-color: #D2D2D2; border-radius: 4px;">
+                    <h5 class="text-dark mb-2">Net Profit</h5>
+                    <h3 class="font-weight-bold mb-2">@netProfit.ToString("C2")</h3>
+                    <small class="text-muted">Sales minus expense</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-7 mb-4 mb-lg-0">
+                <div class="card border-0 p-4 shadow-sm h-100" style="background-color: #D2D2D2; border-radius: 4px;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="text-dark m-0">Financial Chart</h5>
+                        <small class="text-muted">Expense, sales, and profit</small>
+                    </div>
+
+                    <div class="rounded p-4" style="background: linear-gradient(180deg, #101828 0%, #1f2937 100%); min-height: 320px;">
+                        <div class="d-flex align-items-end justify-content-between h-100" style="min-height: 250px;">
+                            @foreach (var point in chartPoints)
+                            {
+                                <div class="d-flex flex-column align-items-center justify-content-end flex-fill px-2" style="min-height: 250px;">
+                                    <div class="text-white font-weight-bold mb-2">@point.Value.ToString("C0")</div>
+                                    <div class="w-100 d-flex align-items-end justify-content-center" style="height: 220px;">
+                                        <div style="width: 120px; height: @(point.Height)px; background: @point.Color; border-radius: 14px 14px 6px 6px; box-shadow: 0 12px 24px rgba(0,0,0,0.25);"></div>
+                                    </div>
+                                    <div class="text-white mt-2 font-weight-bold">@point.Label</div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-5">
+                <div class="card border-0 p-4 shadow-sm h-100" style="background-color: #D2D2D2; border-radius: 4px;">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="text-dark mb-0 font-weight-bold">Recent Orders</h5>
+                        <small class="text-muted">Live order stream</small>
+                    </div>
+
+                    @if (!recentOrders.Any())
+                    {
+                        <div class="text-center text-muted py-5">No orders yet.</div>
+                    }
+                    else
+                    {
+                        <div class="d-flex flex-column gap-3">
+                            @foreach (var order in recentOrders)
+                            {
+                                <div class="d-flex align-items-start justify-content-between p-3 border-bottom border-secondary">
+                                    <div>
+                                        <div class="d-flex align-items-center gap-2 mb-1">
+                                            <span class="badge bg-dark text-white">#@order.Id</span>
+                                            <span class="badge bg-info text-dark">@order.Status</span>
+                                            <span class="badge @("badge " + (order.IsPaid ? "bg-success" : "bg-warning text-dark"))">@(order.IsPaid ? "Paid" : "Pending")</span>
+                                        </div>
+                                        <h6 class="m-0 font-weight-bold text-dark">@order.CustomerName</h6>
+                                        <small class="text-muted">@order.ItemSummary</small>
+                                    </div>
+                                    <div class="text-end">
+                                        <span class="small font-weight-bold d-block">@order.TotalAmount.ToString("C2")</span>
+                                        <small class="text-muted">@order.CreatedAt.ToString("MMM dd, HH:mm")</small>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    private bool isLoading = true;
+    private List<InventoryItemDto> inventoryItems = new();
+    private List<OrderDto> orders = new();
+    private List<OrderDto> recentOrders = new();
+    private PeriodicTimer? refreshTimer;
+    private CancellationTokenSource? refreshCts;
+
+    private decimal totalExpense;
+    private decimal totalSales;
+    private decimal netProfit;
+
+    private IReadOnlyList<ChartPointViewModel> chartPoints => BuildChartPoints();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardAsync();
+        StartAutoRefresh();
+    }
+
+    private void StartAutoRefresh()
+    {
+        refreshCts = new CancellationTokenSource();
+        refreshTimer = new PeriodicTimer(TimeSpan.FromSeconds(20));
+        _ = Task.Run(() => PollDashboardAsync(refreshCts.Token));
+    }
+
+    private async Task PollDashboardAsync(CancellationToken cancellationToken)
+    {
+        if (refreshTimer is null)
+        {
+            return;
+        }
+
+        try
+        {
+            while (await refreshTimer.WaitForNextTickAsync(cancellationToken))
+            {
+                await LoadDashboardAsync();
+                await InvokeAsync(StateHasChanged);
+            }
+        }
+        catch (OperationCanceledException)
+        {
+        }
+    }
+
+    private async Task LoadDashboardAsync()
+    {
+        isLoading = true;
+
+        try
+        {
+            var inventoryTask = Http.GetFromJsonAsync<List<InventoryItemDto>>("api/inventory");
+            var ordersTask = Http.GetFromJsonAsync<List<OrderDto>>("api/orders/admin");
+
+            await Task.WhenAll(inventoryTask, ordersTask);
+
+            inventoryItems = inventoryTask.Result ?? new List<InventoryItemDto>();
+            orders = ordersTask.Result ?? new List<OrderDto>();
+
+            totalExpense = inventoryItems.Sum(item => (decimal)item.StockAmount * item.UnitPrice);
+            totalSales = orders.Sum(order => order.TotalAmount);
+            netProfit = totalSales - totalExpense;
+
+            recentOrders = orders
+                .OrderByDescending(order => order.CreatedAt)
+                .Take(5)
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading dashboard data: {ex.Message}");
+            inventoryItems = new List<InventoryItemDto>();
+            orders = new List<OrderDto>();
+            recentOrders = new List<OrderDto>();
+            totalExpense = 0;
+            totalSales = 0;
+            netProfit = 0;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        refreshCts?.Cancel();
+        refreshTimer?.Dispose();
+        refreshCts?.Dispose();
+    }
+
+    public class InventoryItemDto
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public double StockAmount { get; set; }
+        public string Unit { get; set; } = string.Empty;
+        public decimal UnitPrice { get; set; }
+        public bool IsAvailable { get; set; }
+    }
+
+    public class OrderDto
+    {
+        public int Id { get; set; }
+        public string CustomerName { get; set; } = string.Empty;
+        public string Status { get; set; } = string.Empty;
+        public bool IsPaid { get; set; }
+        public decimal TotalAmount { get; set; }
+        public DateTime CreatedAt { get; set; }
+        public List<OrderLineItemDto> Items { get; set; } = new();
+
+        public string ItemSummary => Items.Count == 0
+            ? "No items"
+            : string.Join(", ", Items.Take(3).Select(item => item.ProductName)) + (Items.Count > 3 ? "..." : string.Empty);
+    }
+
+    public class OrderLineItemDto
+    {
+        public int ProductId { get; set; }
+        public string ProductName { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public int Quantity { get; set; }
+        public bool IsHalfOption { get; set; }
+        public decimal UnitPrice { get; set; }
+        public string ImageUrl { get; set; } = string.Empty;
+    }
+
+    private IReadOnlyList<ChartPointViewModel> BuildChartPoints()
+    {
+        var maxValue = Math.Max(1m, Math.Max(totalExpense, Math.Max(totalSales, Math.Abs(netProfit))));
+
+        return new[]
+        {
+            new ChartPointViewModel("Expense", totalExpense, 110, "#F97316", maxValue),
+            new ChartPointViewModel("Sales", totalSales, 290, "#22C55E", maxValue),
+            new ChartPointViewModel("Profit", netProfit, 470, netProfit >= 0 ? "#38BDF8" : "#EF4444", maxValue)
+        };
+    }
+
+    private sealed class ChartPointViewModel
+    {
+        public ChartPointViewModel(string label, decimal value, double x, string color, decimal maxValue)
+        {
+            Label = label;
+            Value = value;
+            X = x;
+            Color = color;
+            Height = Math.Max(20, Math.Round((double)(value / maxValue) * 210));
+        }
+
+        public string Label { get; }
+        public decimal Value { get; }
+        public double X { get; }
+        public string Color { get; }
+        public double Height { get; }
+        public double Y => 270 - Height;
+    }
+}

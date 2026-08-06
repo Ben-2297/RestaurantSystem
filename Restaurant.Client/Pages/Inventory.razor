@@ -1,0 +1,314 @@
+@page "/inventory"
+@attribute [Authorize(Roles = "Admin,KitchenStaff")]
+@inject HttpClient Http
+@inject NavigationManager Navigation
+
+<div class="container-fluid p-4" style="background-color: #D6D6D6; min-height: 100vh; font-family: 'Arial', sans-serif;">
+
+    <!-- Page Title Heading -->
+    <h3 class="font-weight-bold text-dark mb-4" style="letter-spacing: -0.5px;">Inventory Management</h3>
+
+    <!-- Action Toolbar Row -->
+    <div class="d-flex flex-wrap align-items-center justify-content-between gap-3 mb-4">
+        <div class="d-flex gap-2">
+            <AuthorizeView Roles="Admin">
+                <Authorized>
+                    <button class="btn text-dark font-weight-bold d-flex align-items-center gap-1 border-0 shadow-sm px-3 py-2" 
+                            style="background-color: #00C2FF; border-radius: 2px; font-size: 14px;" 
+                            @onclick="OpenAddModal">
+                        <span>⊕</span> Add Items
+                    </button>
+                </Authorized>
+            </AuthorizeView>
+            <button class="btn text-dark font-weight-bold d-flex align-items-center gap-1 border-0 shadow-sm px-3 py-2" 
+                    style="background-color: #00C2FF; border-radius: 2px; font-size: 14px;" 
+                    @onclick="ToggleRestockFilter">
+                <span>⊕</span> Restock
+            </button>
+            @if (filterShowLowStock || !string.IsNullOrEmpty(selectedCategoryFilter))
+            {
+                <button class="btn btn-secondary text-white font-weight-bold px-3 py-2" 
+                        style="border-radius: 2px; font-size: 14px;" 
+                        @onclick="ResetAllFilters">
+                    Clear Filters
+                </button>
+            }
+        </div>
+
+        <!-- Search Input Field -->
+        <div style="flex: 1; max-width: 300px;">
+            <div class="input-group bg-white shadow-sm" style="border: 1px solid #B5B5B5; border-radius: 2px;">
+                <span class="input-group-text bg-transparent border-0 pe-1 text-muted" style="font-size: 14px;">🔍</span>
+                <input type="text" class="form-control border-0 ps-1 py-2 text-dark" 
+                       style="font-size: 14px; outline: none; box-shadow: none;" 
+                       placeholder="Search" 
+                       @bind-value="searchQuery" 
+                       @bind-value:event="oninput" 
+                       @onkeyup="ApplyFilters" />
+            </div>
+        </div>
+
+        <!-- Filter Dropdown Selection -->
+        <div style="width: 260px;">
+            <select class="form-select text-dark shadow-sm py-2" 
+                    style="border: 1px solid #B5B5B5; border-radius: 2px; font-size: 14px; background-color: #FFF;" 
+                    @bind="SelectedCategoryFilter">
+                <option value="">Filter: All Category</option>
+                <option value="Spices">Spices</option>
+                <option value="Seasoning">Seasoning</option>
+                <option value="Meat">Meat</option>
+                <option value="Vegetables">Vegetables</option>
+                <option value="Fruits">Fruits</option>
+                <option value="Drinks">Drinks</option>
+                <option value="Noodles">Noodles</option>
+                <option value="Pork">Pork</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Content Card Grid Backdrop -->
+    <div class="card border-0 shadow-sm p-4" style="background-color: #FFFBFB; border-radius: 4px; min-height: 500px;">
+        <div class="table-responsive">
+            <table class="table table-borderless bg-transparent m-0 align-middle">
+                <thead>
+                    <tr class="border-0">
+                        <th class="font-weight-bold text-dark p-3" style="font-size: 15px; width: 25%;">Item Name</th>
+                        <th class="font-weight-bold text-dark p-3" style="font-size: 15px; width: 20%;">Category</th>
+                        <th class="font-weight-bold text-dark p-3" style="font-size: 15px; width: 20%;">Stock/unit</th>
+                        <th class="font-weight-bold text-dark p-3" style="font-size: 15px; width: 15%;">Price</th>
+                        <th class="font-weight-bold text-dark p-3" style="font-size: 15px; width: 15%;">Status</th>
+                        <AuthorizeView Roles="Admin" Context="authContext">
+                            <Authorized>
+                                <th class="font-weight-bold text-dark p-3 text-start" style="font-size: 15px; width: 20%;">Action</th>
+                            </Authorized>
+                        </AuthorizeView>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (filteredItems == null)
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center p-5 text-muted">
+                                <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                                Loading inventory logs...
+                            </td>
+                        </tr>
+                    }
+                    else if (!filteredItems.Any())
+                    {
+                        <tr>
+                            <td colspan="5" class="text-center p-5 text-muted font-italic" style="font-size: 14px;">
+                                No inventory entries match current filters.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var item in filteredItems)
+                        {
+                            bool isOut = item.StockAmount <= 0;
+                            
+                            // Evaluate alerts strictly based on custom database threshold fields
+                            bool isAddStock = !isOut && (item.StockAmount <= item.AddStockThreshold);
+                            bool isLowStock = !isOut && !isAddStock && (item.StockAmount <= item.LowStockThreshold);
+
+                            <tr style="border-bottom: 1px solid rgba(0,0,0,0.02);">
+                                <td class="p-3 text-dark font-weight-normal" style="font-size: 18px;">@item.Name</td>
+                                <td class="p-3 text-secondary font-weight-normal" style="font-size: 15px;">@item.Category</td>
+                                <td class="p-3 text-dark font-weight-normal" style="font-size: 15px;">
+                                    @(isOut ? "0" : $"{item.StockAmount}{item.Unit}")
+                                </td>
+                                <td class="p-3 text-dark font-weight-normal" style="font-size: 15px;">
+                                    $@item.UnitPrice
+                                </td>
+                                <td class="p-3">
+                                    @if (!item.IsAvailable)
+                                    {
+                                        <div class="text-center text-white font-weight-normal px-2 py-1 small" style="background-color: #6C757D; width: 90px; border-radius: 2px;">Disabled</div>
+                                    }
+                                    else if (isOut)
+                                    {
+                                        <div class="text-center text-white font-weight-normal px-2 py-1 small" style="background-color: #FF0000; width: 90px; border-radius: 2px; font-size: 11px;">Out of stock</div>
+                                    }
+                                    else if (isAddStock)
+                                    {
+                                        <div class="text-center text-dark font-weight-normal px-2 py-1 small" style="background-color: #FFA500; width: 90px; border-radius: 2px; font-size: 11px;">Add Stock</div>
+                                    }
+                                    else if (isLowStock)
+                                    {
+                                        <div class="text-center text-dark font-weight-normal px-2 py-1 small" style="background-color: #FFC107; width: 90px; border-radius: 2px; font-size: 11px;">Low Stock</div>
+                                    }
+                                    else
+                                    {
+                                        <div class="text-center text-dark font-weight-normal px-2 py-1 small" style="background-color: #32CD32; width: 90px; border-radius: 2px; font-size: 11px;">In Stock</div>
+                                    }
+                                </td>
+                                <AuthorizeView Roles="Admin" Context="authContext">
+                                    <Authorized>
+                                        <td class="p-3">
+                                            <div class="d-flex gap-2">
+                                                <button class="btn btn-sm text-white px-2 py-1 d-flex align-items-center gap-1" 
+                                                        style="background-color: #00C2FF; border-radius: 2px; font-size: 11px;" 
+                                                        @onclick="() => OpenEditModal(item)">
+                                                    ✏️ Edit
+                                                </button>
+                                                <button class="btn btn-sm text-white px-2 py-1 d-flex align-items-center gap-1" 
+                                                        style="background-color: #FF0000; border-radius: 2px; font-size: 11px;" 
+                                                        @onclick="() => DeleteItem(item.Id)">
+                                                    🗑️ Delete
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </Authorized>
+                                </AuthorizeView>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<InventoryItemModal IsOpen="isModalOpen" 
+                    EditingItem="selectedItem" 
+                    OnClose="CloseModal" 
+                    OnSave="RefreshData" />
+
+@code {
+    private List<InventoryItem>? inventoryItems;
+    private List<InventoryItem>? filteredItems;
+    
+    private bool isModalOpen = false;
+    private InventoryItem? selectedItem = null;
+    private bool filterShowLowStock = false;
+    private string searchQuery = string.Empty;
+    private string selectedCategoryFilter = string.Empty;
+
+    private string SelectedCategoryFilter
+    {
+        get => selectedCategoryFilter;
+        set
+        {
+            selectedCategoryFilter = value;
+            ApplyFilters();
+        }
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadInventory();
+    }
+
+    private async Task LoadInventory()
+    {
+        try
+        {
+            inventoryItems = await Http.GetFromJsonAsync<List<InventoryItem>>("api/inventory");
+            ApplyFilters();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error updating UI view stream: {ex.Message}");
+        }
+    }
+
+    private void ApplyFilters()
+    {
+        if (inventoryItems == null) return;
+
+        var query = inventoryItems.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(searchQuery))
+        {
+            query = query.Where(i => i.Name.Contains(searchQuery, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (!string.IsNullOrWhiteSpace(selectedCategoryFilter))
+        {
+            query = query.Where(i => i.Category.Equals(selectedCategoryFilter, StringComparison.OrdinalIgnoreCase));
+        }
+
+        if (filterShowLowStock)
+        {
+            // Restock helper includes anything that hits the custom Low Stock limit value
+            query = query.Where(i => i.StockAmount <= i.LowStockThreshold || i.StockAmount <= 0);
+        }
+
+        filteredItems = query.ToList();
+    }
+
+    private void ToggleRestockFilter()
+    {
+        filterShowLowStock = true;
+        ApplyFilters();
+    }
+
+    private void ResetAllFilters()
+    {
+        filterShowLowStock = false;
+        searchQuery = string.Empty;
+        selectedCategoryFilter = string.Empty;
+        ApplyFilters();
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/dashboard");
+    }
+
+    private void OpenAddModal()
+    {
+        selectedItem = null;
+        isModalOpen = true;
+    }
+
+    private void OpenEditModal(InventoryItem item)
+    {
+        selectedItem = item;
+        isModalOpen = true;
+    }
+
+    private void CloseModal()
+    {
+        isModalOpen = false;
+        selectedItem = null;
+    }
+
+    private async Task RefreshData()
+    {
+        isModalOpen = false;
+        selectedItem = null;
+        await LoadInventory();
+    }
+
+    private async Task DeleteItem(int id)
+    {
+        try
+        {
+            var response = await Http.DeleteAsync($"api/inventory/{id}");
+            if (response.IsSuccessStatusCode)
+            {
+                await LoadInventory();
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error removing asset row: {ex.Message}");
+        }
+    }
+
+    public class InventoryItem
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public double StockAmount { get; set; }
+        public string Unit { get; set; } = string.Empty;
+        public decimal UnitPrice { get; set; }
+        public bool IsAvailable { get; set; } = true;
+        public double LowStockThreshold { get; set; }
+        public double AddStockThreshold { get; set; }
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+    }
+}
