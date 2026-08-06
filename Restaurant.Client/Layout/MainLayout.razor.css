@@ -1,0 +1,57 @@
+.page {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+}
+
+/* 🟢 FORCE REMOVE STRAY MARGINS & SET UNIFORM BACKGROUNDS */
+main {
+    flex: 1;
+    background-color: #E0E0E0 !important;
+}
+
+article {
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+.sidebar {
+    background-color: #DBDBDB !important;
+    background-image: none !important;
+}
+
+.top-row {
+    display: none !important; /* Wipes out the residual template bar height entirely */
+}
+
+@media (max-width: 640.98px) {
+    .top-row {
+        justify-content: space-between;
+    }
+}
+
+@media (min-width: 641px) {
+    .page {
+        flex-direction: row;
+    }
+
+    /* 🟢 UPDATED: This tells the layout grid to look at the admin state check. If it's empty, it won't create a blank gray bar! */
+    .sidebar:not(:has(*)) {
+        display: none !important;
+        width: 0px !important;
+    }
+
+    .sidebar:has(*) {
+        width: 250px;
+        height: 100vh;
+        position: sticky;
+        top: 0;
+        background-color: #DBDBDB !important;
+        background-image: none !important;
+    }
+
+    .top-row, article {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+}

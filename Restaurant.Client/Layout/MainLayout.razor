@@ -1,0 +1,14 @@
+﻿@inherits LayoutComponentBase
+
+<div class="page">
+    <!-- Blazor's CSS isolation grid forces empty containers to use 0px space when vacant -->
+    <div class="sidebar d-contents-if-empty">
+        <NavMenu />
+    </div>
+
+    <main>
+        <article class="p-0 w-100">
+            @Body
+        </article>
+    </main>
+</div>

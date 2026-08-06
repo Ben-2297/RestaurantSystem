@@ -14,7 +14,10 @@ namespace Restaurant.API.Models
         public decimal Price { get; set; }
 
         [Required]
-        public string Description { get; set; } = string.Empty; // Used for Category (e.g., Noodles)
+        public string Category { get; set; } = string.Empty;
+
+        [Required]
+        public string Description { get; set; } = string.Empty; // Stored ingredient list for product recipe
 
         [Required]
         public bool IsAvailable { get; set; } = true;

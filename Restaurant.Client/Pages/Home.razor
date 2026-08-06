@@ -1,15 +1,32 @@
-﻿@page "/home"
+@page "/home"
 @attribute [Authorize]
 
-<AuthorizeView Roles="Admin">
+<AuthorizeView Context="authState">
     <Authorized>
-        <AdminDashboard />
-        <AdminGeminiAssistant />
+        @if (authState.User.IsInRole("Admin"))
+        {
+            <AdminDashboard />
+            <AdminGeminiAssistant />
+        }
+        else if (authState.User.IsInRole("KitchenStaff"))
+        {
+            <KitchenDashboard />
+        }
+        else
+        {
+            <div class="container py-5">
+                <div class="alert alert-warning" role="alert">
+                    Your account is signed in but does not have an Admin or KitchenStaff dashboard role assigned.
+                    Please contact the administrator to get the correct role.
+                </div>
+            </div>
+        }
     </Authorized>
-</AuthorizeView>
-
-<AuthorizeView Roles="KitchenStaff">
-    <Authorized>
-        <KitchenDashboard />
-    </Authorized>
+    <NotAuthorized>
+        <div class="container py-5">
+            <div class="alert alert-info" role="alert">
+                Please sign in to access the dashboard.
+            </div>
+        </div>
+    </NotAuthorized>
 </AuthorizeView>

@@ -77,6 +77,18 @@ namespace Restaurant.API.Data
                 .WithOne(p => p.Order)
                 .HasForeignKey(p => p.OrderId)
                 .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ProductItem>()
+                .HasMany(p => p.RecipeIngredients)
+                .WithOne(r => r.ProductItem)
+                .HasForeignKey(r => r.ProductItemId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ProductRecipe>()
+                .HasOne(r => r.InventoryItem)
+                .WithMany()
+                .HasForeignKey(r => r.InventoryItemId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

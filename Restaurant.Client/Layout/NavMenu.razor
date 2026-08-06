@@ -1,0 +1,26 @@
+﻿@inject ILocalStorageService LocalStorage
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Navigation
+
+<AuthorizeView Roles="Admin">
+    <Authorized>
+        <AdminNavMenu NavMenuCssClass="@NavMenuCssClass" ToggleNavMenu="ToggleNavMenu" OnLogoutRequest="HandleLogout" />
+    </Authorized>
+</AuthorizeView>
+
+@code {
+    private bool collapseNavMenu = false;
+    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
+
+    private void ToggleNavMenu()
+    {
+        collapseNavMenu = !collapseNavMenu;
+    }
+
+    private async Task HandleLogout()
+    {
+        await LocalStorage.RemoveItemAsync("authToken");
+        await AuthStateProvider.GetAuthenticationStateAsync();
+        Navigation.NavigateTo("/");
+    }
+}

@@ -39,24 +39,35 @@ namespace Restaurant.API.Controllers
                         return BadRequest("Ingredient quantity must be greater than zero.");
                     }
 
+                    if (string.IsNullOrWhiteSpace(ing.Unit))
+                    {
+                        return BadRequest("Ingredient unit is required.");
+                    }
+
                     var inventoryItem = await _context.Inventory.FirstOrDefaultAsync(i => i.Id == ing.InventoryItemId);
                     if (inventoryItem is null)
                     {
                         return BadRequest($"Inventory item {ing.InventoryItemId} was not found.");
                     }
 
-                    if (inventoryItem.StockAmount < ing.Quantity)
+                    if (!TryConvertQuantity(ing.Quantity, ing.Unit, inventoryItem.Unit, out var requiredInventoryQty))
                     {
-                        return BadRequest($"Insufficient stock for {inventoryItem.Name}. Required: {ing.Quantity}, Available: {inventoryItem.StockAmount}.");
+                        return BadRequest($"Cannot convert ingredient unit '{ing.Unit}' to inventory unit '{inventoryItem.Unit}'.");
                     }
 
-                    inventoryItem.StockAmount -= ing.Quantity;
+                    if (inventoryItem.StockAmount < requiredInventoryQty)
+                    {
+                        return BadRequest($"Insufficient stock for {inventoryItem.Name}. Required: {requiredInventoryQty} {inventoryItem.Unit}, Available: {inventoryItem.StockAmount} {inventoryItem.Unit}.");
+                    }
+
+                    inventoryItem.StockAmount -= requiredInventoryQty;
                 }
             }
 
             var product = new ProductItem
             {
                 Name = payload.Name,
+                Category = payload.Category,
                 Price = payload.Price,
                 Description = payload.Description,
                 IsAvailable = payload.IsAvailable,
@@ -75,7 +86,8 @@ namespace Restaurant.API.Controllers
                     {
                         ProductItemId = product.Id,
                         InventoryItemId = ing.InventoryItemId,
-                        QuantityRequired = ing.Quantity
+                        QuantityRequired = ing.Quantity,
+                        QuantityUnit = ing.Unit
                     });
                 }
                 await _context.SaveChangesAsync();
@@ -94,20 +106,48 @@ namespace Restaurant.API.Controllers
 
             if (product == null) return NotFound("Product not found");
 
-            var existingRecipeByInventory = product.RecipeIngredients
-                .GroupBy(r => r.InventoryItemId)
-                .ToDictionary(g => g.Key, g => g.Sum(r => r.QuantityRequired));
-
-            var newRecipeByInventory = (payload.Ingredients ?? new List<RecipeLinkPayload>())
-                .GroupBy(i => i.InventoryItemId)
-                .ToDictionary(g => g.Key, g => g.Sum(i => i.Quantity));
-
-            foreach (var kvp in newRecipeByInventory)
+            var existingRecipeByInventory = new Dictionary<int, double>();
+            foreach (var recipe in product.RecipeIngredients)
             {
-                if (kvp.Value <= 0)
+                var inventoryItem = await _context.Inventory.FirstOrDefaultAsync(i => i.Id == recipe.InventoryItemId);
+                if (inventoryItem is null)
+                {
+                    return BadRequest($"Inventory item {recipe.InventoryItemId} was not found.");
+                }
+
+                if (!TryConvertQuantity(recipe.QuantityRequired, recipe.QuantityUnit, inventoryItem.Unit, out var normalizedQuantity))
+                {
+                    return BadRequest($"Cannot convert existing recipe unit '{recipe.QuantityUnit}' to inventory unit '{inventoryItem.Unit}'.");
+                }
+
+                existingRecipeByInventory[recipe.InventoryItemId] = existingRecipeByInventory.GetValueOrDefault(recipe.InventoryItemId) + normalizedQuantity;
+            }
+
+            var newRecipeByInventory = new Dictionary<int, double>();
+            foreach (var ingredient in payload.Ingredients ?? new List<RecipeLinkPayload>())
+            {
+                if (ingredient.Quantity <= 0)
                 {
                     return BadRequest("Ingredient quantity must be greater than zero.");
                 }
+
+                if (string.IsNullOrWhiteSpace(ingredient.Unit))
+                {
+                    return BadRequest("Ingredient unit is required.");
+                }
+
+                var inventoryItem = await _context.Inventory.FirstOrDefaultAsync(i => i.Id == ingredient.InventoryItemId);
+                if (inventoryItem is null)
+                {
+                    return BadRequest($"Inventory item {ingredient.InventoryItemId} was not found.");
+                }
+
+                if (!TryConvertQuantity(ingredient.Quantity, ingredient.Unit, inventoryItem.Unit, out var normalizedQuantity))
+                {
+                    return BadRequest($"Cannot convert ingredient unit '{ingredient.Unit}' to inventory unit '{inventoryItem.Unit}'.");
+                }
+
+                newRecipeByInventory[ingredient.InventoryItemId] = newRecipeByInventory.GetValueOrDefault(ingredient.InventoryItemId) + normalizedQuantity;
             }
 
             foreach (var kvp in newRecipeByInventory)
@@ -126,7 +166,7 @@ namespace Restaurant.API.Controllers
                 {
                     if (inventoryItem.StockAmount < additionalRequired)
                     {
-                        return BadRequest($"Insufficient stock for {inventoryItem.Name}. Required additional: {additionalRequired}, Available: {inventoryItem.StockAmount}.");
+                        return BadRequest($"Insufficient stock for {inventoryItem.Name}. Required additional: {additionalRequired} {inventoryItem.Unit}, Available: {inventoryItem.StockAmount} {inventoryItem.Unit}.");
                     }
 
                     inventoryItem.StockAmount -= additionalRequired;
@@ -135,6 +175,7 @@ namespace Restaurant.API.Controllers
 
             // 1. Update master values
             product.Name = payload.Name;
+            product.Category = payload.Category;
             product.Price = payload.Price;
             product.Description = payload.Description;
             product.IsAvailable = payload.IsAvailable;
@@ -152,7 +193,8 @@ namespace Restaurant.API.Controllers
                     {
                         ProductItemId = product.Id,
                         InventoryItemId = ing.InventoryItemId,
-                        QuantityRequired = ing.Quantity
+                        QuantityRequired = ing.Quantity,
+                        QuantityUnit = ing.Unit
                     });
                 }
             }
@@ -183,6 +225,7 @@ namespace Restaurant.API.Controllers
         public class ProductSavePayload
         {
             public string Name { get; set; } = string.Empty;
+            public string Category { get; set; } = string.Empty;
             public decimal Price { get; set; }
             public string Description { get; set; } = string.Empty;
             public bool IsAvailable { get; set; }
@@ -194,6 +237,93 @@ namespace Restaurant.API.Controllers
         {
             public int InventoryItemId { get; set; }
             public double Quantity { get; set; }
+            public string Unit { get; set; } = string.Empty;
+        }
+
+        private static bool TryConvertQuantity(double quantity, string fromUnit, string toUnit, out double convertedQuantity)
+        {
+            convertedQuantity = 0;
+            var source = NormalizeUnit(fromUnit);
+            var target = NormalizeUnit(toUnit);
+
+            if (source == null || target == null)
+            {
+                return false;
+            }
+
+            if (source == target)
+            {
+                convertedQuantity = quantity;
+                return true;
+            }
+
+            var sourceCategory = GetUnitCategory(source);
+            var targetCategory = GetUnitCategory(target);
+            if (sourceCategory != targetCategory || sourceCategory == UnitCategory.Unknown)
+            {
+                return false;
+            }
+
+            if (sourceCategory == UnitCategory.Weight)
+            {
+                var grams = source switch
+                {
+                    "g" => quantity,
+                    "kg" => quantity * 1000,
+                    "lb" => quantity * 453.59237,
+                    _ => 0
+                };
+
+                convertedQuantity = target switch
+                {
+                    "g" => grams,
+                    "kg" => grams / 1000,
+                    "lb" => grams / 453.59237,
+                    _ => 0
+                };
+
+                return convertedQuantity > 0;
+            }
+
+            if (sourceCategory == UnitCategory.Volume)
+            {
+                convertedQuantity = quantity; // Only liters supported at this time
+                return true;
+            }
+
+            return false;
+        }
+
+        private static string? NormalizeUnit(string unit)
+        {
+            var normalized = unit.Trim().ToLowerInvariant();
+            return normalized switch
+            {
+                "kg" or "kilogram" or "kilograms" => "kg",
+                "g" or "gram" or "grams" => "g",
+                "lb" or "lbs" or "pound" or "pounds" => "lb",
+                "l" or "liter" or "liters" or "litre" or "litres" => "l",
+                _ => null
+            };
+        }
+
+        private enum UnitCategory
+        {
+            Unknown,
+            Weight,
+            Volume
+        }
+
+        private static UnitCategory GetUnitCategory(string unit)
+        {
+            return unit switch
+            {
+                "kg" => UnitCategory.Weight,
+                "g" => UnitCategory.Weight,
+                "lb" => UnitCategory.Weight,
+                "l" => UnitCategory.Volume,
+                _ => UnitCategory.Unknown
+            };
         }
     }
 }

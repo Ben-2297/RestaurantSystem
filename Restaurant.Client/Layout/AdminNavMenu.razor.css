@@ -1,0 +1,24 @@
+/* Force links and bootstrap icons inside the admin menu to be solid charcoal black */
+::deep a, 
+.nav-link, 
+.btn-link,
+span[class^="bi bi-"] {
+    color: #000000 !important;
+    text-decoration: none;
+}
+
+/* Add subtle hover background tracking matching your wireframe concept */
+.nav-item ::deep a:hover, 
+.btn-link:hover {
+    background-color: rgba(0, 0, 0, 0.05) !important;
+    border-radius: 4px;
+    text-decoration: none;
+}
+
+/* Fix icon spacing alignments */
+.nav-link span {
+    margin-right: 0.75rem;
+    display: inline-block;
+    width: 1.25rem;
+    text-align: center;
+}

@@ -17,7 +17,9 @@ namespace Restaurant.API.Models
         [Required]
         public double QuantityRequired { get; set; }
 
-        // Entity Framework Relationships (Navigation Properties)
+        [Required]
+        public string QuantityUnit { get; set; } = string.Empty;
+
         [ForeignKey("ProductItemId")]
         public ProductItem? ProductItem { get; set; }
 

@@ -1,0 +1,242 @@
+@page "/products"
+@attribute [Authorize(Roles = "Admin")]
+@inject HttpClient Http
+
+<div class="container-fluid p-4" style="background-color: #E0E0E0; min-height: 100vh;">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3 class="font-weight-bold text-dark m-0">Products</h3>
+        
+        <div class="d-flex gap-2 p-1" style="background-color: #D2D2D2; border-radius: 4px;">
+            <button class="btn btn-sm px-3 font-weight-bold @(currentFilter == "All" ? "btn-dark text-white" : "text-dark")" @onclick='() => SetFilter("All")' style="border-radius: 4px; border: 0; background-color: @(currentFilter == "All" ? "#212529" : "transparent");">All</button>
+            <button class="btn btn-sm px-3 font-weight-bold @(currentFilter == "Available" ? "btn-dark text-white" : "text-dark")" @onclick='() => SetFilter("Available")' style="border-radius: 4px; border: 0; background-color: @(currentFilter == "Available" ? "#212529" : "transparent");">Available</button>
+            <button class="btn btn-sm px-3 font-weight-bold @(currentFilter == "Unavailable" ? "btn-dark text-white" : "text-dark")" @onclick='() => SetFilter("Unavailable")' style="border-radius: 4px; border: 0; background-color: @(currentFilter == "Unavailable" ? "#212529" : "transparent");">Unavailable</button>
+        </div>
+    </div>
+
+    <div class="mb-4">
+        <button class="btn btn-dark font-weight-bold px-3 py-2 shadow-sm text-uppercase" @onclick="OpenAddModal" style="border-radius: 4px; letter-spacing: 0.5px;">
+            <span class="oi oi-plus me-1" aria-hidden="true"></span> Add Products
+        </button>
+    </div>
+
+    <div class="card border-0 p-4 shadow-sm" style="background-color: #D2D2D2; border-radius: 4px;">
+        <div class="table-responsive">
+            <table class="table align-middle m-0" style="border-collapse: collapse;">
+                <thead>
+                    <tr class="border-bottom border-secondary pb-3">
+                        <th class="p-3 font-weight-bold text-dark" style="width: 50px;">#</th>
+                        <th class="p-3 font-weight-bold text-dark">Products</th>
+                        <th class="p-3 font-weight-bold text-dark">Category</th>
+                        <th class="p-3 font-weight-bold text-dark">Price</th>
+                        <th class="p-3 font-weight-bold text-dark">Description</th>
+                        <th class="p-3 font-weight-bold text-dark">Status</th>
+                        <th class="p-3 font-weight-bold text-dark text-center" style="width: 180px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var product in GetFilteredProducts())
+                    {
+                        <tr class="border-bottom border-secondary pb-3">
+                            <td class="p-3 font-weight-bold text-dark">@product.Id</td>
+                            <td class="p-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <img src="@product.ImageUrl" alt="@product.Name" class="rounded object-fit-cover shadow-sm" style="width: 65px; height: 65px; border-radius: 4px;" onerror="this.src='https://via.placeholder.com/65'" />
+                                    <div>
+                                        <h6 class="m-0 font-weight-bold text-dark">@product.Name</h6>
+                                        <small class="text-muted text-uppercase d-block mt-1" style="font-size: 0.65rem; font-weight: bold;">
+                                            Added: @product.CreatedAt.ToString("MM/dd/yyyy")
+                                        </small>
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="p-3 font-weight-bold text-dark">@product.Category</td>
+                            <td class="p-3 font-weight-bold text-dark">$@product.Price</td>
+                            <td class="p-3 text-dark font-weight-bold">@product.Description</td>
+                            <td class="p-3">
+                                <span class="badge font-weight-bold text-white @(product.IsAvailable ? "bg-success" : "bg-danger")" style="border-radius: 4px; padding: 6px 10px;">
+                                    @(product.IsAvailable ? "Available" : "Unavailable")
+                                </span>
+                            </td>
+                            <td class="p-3 text-center">
+                                <div class="d-flex justify-content-center gap-2">
+                                    <button class="btn btn-sm btn-info text-white font-weight-bold px-2 py-1" @onclick="() => OpenEditModal(product)" style="background-color: #00B4D8; border: 0; border-radius: 4px;">
+                                        <span class="oi oi-pencil" aria-hidden="true"></span> Edit
+                                    </button>
+                                    <button class="btn btn-sm btn-danger font-weight-bold px-2 py-1" @onclick="() => HandleDeleteProduct(product.Id)" style="background-color: #DC3545; border: 0; border-radius: 4px;">
+                                        <span class="oi oi-trash" aria-hidden="true"></span> Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<AddProductModal IsOpen="isModalOpen" 
+                 OnClose="() => isModalOpen = false" 
+                 InventoryList="inventoryList" 
+                 EditingProduct="selectedProduct"
+                 OnSave="HandleSaveProduct" />
+
+@code {
+    private string currentFilter = "All";
+    private bool isModalOpen = false;
+    private ProductItem? selectedProduct = null; // Holds the reference when editing
+    private List<ProductItem> products = new();
+    private List<InventoryItem> inventoryList = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDataAsync();
+    }
+
+    private async Task LoadDataAsync()
+    {
+        await LoadInventoryAsync();
+        await LoadProductsAsync();
+    }
+
+    private async Task LoadInventoryAsync()
+    {
+        var result = await Http.GetFromJsonAsync<List<InventoryItem>>("api/inventory");
+        inventoryList = result ?? new List<InventoryItem>();
+    }
+
+    private async Task LoadProductsAsync()
+    {
+        var result = await Http.GetFromJsonAsync<List<ProductItem>>("api/products");
+        products = result ?? new List<ProductItem>();
+    }
+
+    private void SetFilter(string filter) => currentFilter = filter;
+
+    private IEnumerable<ProductItem> GetFilteredProducts()
+    {
+        if (currentFilter == "Available") return products.Where(p => p.IsAvailable);
+        if (currentFilter == "Unavailable") return products.Where(p => !p.IsAvailable);
+        return products;
+    }
+
+    private void OpenAddModal()
+    {
+        selectedProduct = null; // Setting this to null tells the modal to behave as a clean "Add New" form
+        isModalOpen = true;
+    }
+
+    private void OpenEditModal(ProductItem product)
+    {
+        selectedProduct = product; // Set the item row selection reference
+        isModalOpen = true;
+    }
+
+    private async Task HandleSaveProduct(ProductItem savedItem)
+    {
+        var payload = new ProductSavePayload
+        {
+            Name = savedItem.Name,
+            Category = savedItem.Category,
+            Price = savedItem.Price,
+            Description = savedItem.Description,
+            IsAvailable = savedItem.IsAvailable,
+            ImageUrl = savedItem.ImageUrl,
+            Ingredients = savedItem.RecipeIngredients
+                .Where(x => x.IsActiveInRecipe)
+                .Select(x => new RecipeLinkPayload
+                {
+                    InventoryItemId = x.InventoryItemId,
+                    Quantity = x.QuantityRequired,
+                    Unit = x.QuantityUnit
+                })
+                .ToList()
+        };
+
+        HttpResponseMessage response;
+        if (selectedProduct == null)
+        {
+            response = await Http.PostAsJsonAsync("api/products", payload);
+        }
+        else
+        {
+            response = await Http.PutAsJsonAsync($"api/products/{selectedProduct.Id}", payload);
+        }
+
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadProductsAsync();
+            await LoadInventoryAsync();
+        }
+
+        isModalOpen = false;
+    }
+
+    private async Task HandleDeleteProduct(int id)
+    {
+        var response = await Http.DeleteAsync($"api/products/{id}");
+        if (response.IsSuccessStatusCode)
+        {
+            await LoadProductsAsync();
+        }
+    }
+
+    public class ProductSavePayload
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public string Description { get; set; } = string.Empty;
+        public bool IsAvailable { get; set; }
+        public string ImageUrl { get; set; } = string.Empty;
+        public List<RecipeLinkPayload> Ingredients { get; set; } = new();
+    }
+
+    public class RecipeLinkPayload
+    {
+        public int InventoryItemId { get; set; }
+        public double Quantity { get; set; }
+        public string Unit { get; set; } = string.Empty;
+    }
+
+    public class ProductItem
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public decimal Price { get; set; }
+        public string Category { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public bool IsAvailable { get; set; }
+        public string ImageUrl { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; } = DateTime.Now;
+        public List<ProductRecipe> RecipeIngredients { get; set; } = new();
+    }
+
+    public class ProductRecipe
+    {
+        public int InventoryItemId { get; set; }
+        public double QuantityRequired { get; set; }
+        public string QuantityUnit { get; set; } = string.Empty;
+        public InventoryItem? InventoryItem { get; set; }
+        public bool IsActiveInRecipe { get; set; } = true;
+    }
+
+    public class InventoryItem
+    {
+        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public double StockAmount { get; set; }
+        public string Unit { get; set; } = string.Empty;
+        public string StockCount => string.IsNullOrWhiteSpace(Unit) ? StockAmount.ToString() : $"{StockAmount} {Unit}";
+    }
+
+    public class AddProductModel
+    {
+        public string Name { get; set; } = string.Empty;
+        public decimal Price { get; set; } = 1.00m;
+        public string Category { get; set; } = string.Empty;
+        public string IsAvailableString { get; set; } = "true";
+    }
+}

@@ -260,9 +260,7 @@ public class GeminiAdminInsightsService : IGeminiAdminInsightsService
     {
         var normalizedPrompt = prompt.Trim().ToLowerInvariant();
         var location = ExtractLocationHint(prompt);
-        var note = includeUnavailableNote
-            ? "Gemini is not configured right now, so this answer is generated from local dashboard data.\n\n"
-            : "Gemini is temporarily unavailable, so this answer is generated from local dashboard data.\n\n";
+        var note = "This answer is generated from local dashboard data.\n\n";
 
         var snapshot = await GetSnapshotAsync(cancellationToken);
 

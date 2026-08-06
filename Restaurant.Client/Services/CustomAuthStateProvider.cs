@@ -1,3 +1,4 @@
+using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
@@ -21,6 +22,8 @@ public sealed class CustomAuthStateProvider : AuthenticationStateProvider
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
         var token = await _localStorage.GetItemAsync<string>("authToken");
+        SetHttpClientAuthorization(token);
+
         if (string.IsNullOrWhiteSpace(token))
         {
             return new AuthenticationState(Anonymous);
@@ -33,6 +36,8 @@ public sealed class CustomAuthStateProvider : AuthenticationStateProvider
 
     public void MarkUserAsAuthenticated(string token)
     {
+        SetHttpClientAuthorization(token);
+
         var claims = ParseClaimsFromJwt(token);
         var identity = new ClaimsIdentity(claims, authenticationType: "jwt");
         NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(new ClaimsPrincipal(identity))));
@@ -40,7 +45,16 @@ public sealed class CustomAuthStateProvider : AuthenticationStateProvider
 
     public void MarkUserAsLoggedOut()
     {
+        SetHttpClientAuthorization(null);
         NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(Anonymous)));
+    }
+
+    private void SetHttpClientAuthorization(string? token)
+    {
+        _httpClient.DefaultRequestHeaders.Authorization =
+            string.IsNullOrWhiteSpace(token)
+                ? null
+                : new AuthenticationHeaderValue("Bearer", token);
     }
 
     private static IEnumerable<Claim> ParseClaimsFromJwt(string jwt)
